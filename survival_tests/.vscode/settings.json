@@ -1,0 +1,33 @@
+{
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true,
+    },
+    "python.sortImports.args": [
+        "--src=${workspaceFolder}",
+        "--line-length=150",
+    ],
+    "python.testing.unittestEnabled": true,
+    "cSpell.words": [
+        "aslib",
+        "scipy"
+    ],
+    "terminal.integrated.env.linux": {
+        "PYTHONPATH": "${workspaceFolder}"
+    },
+    "python.linting.pycodestyleEnabled": true,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        ".",
+        "-p",
+        "test*.py"
+    ],
+    "python.testing.pytestEnabled": false,
+    "python.linting.enabled": false,
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--line-length",
+        "199"
+    ],
+    "editor.formatOnSave": true
+}
