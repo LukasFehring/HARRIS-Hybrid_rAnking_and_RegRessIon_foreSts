@@ -1,7 +1,9 @@
-from aslib_scenario.aslib_scenario import ASlibScenario
-import numpy as np
 import logging
+
+import numpy as np
+
 import database_utils
+from aslib_scenario import ASlibScenario
 from evaluation_of_train_test_split import evaluate_train_test_split
 from hyperparameter_optimizer import HyperParameterOptimizer
 
@@ -9,7 +11,7 @@ logger = logging.getLogger("evaluation")
 logger.addHandler(logging.StreamHandler())
 
 
-def publish_results_to_database(db_config, scenario_name: str, fold: int, approach: str, metric_name:str, result: float):
+def publish_results_to_database(db_config, scenario_name: str, fold: int, approach: str, metric_name: str, result: float):
     db_handle, table_name = database_utils.initialize_mysql_db_and_table_name_from_config(db_config)
 
     db_cursor = db_handle.cursor()
@@ -26,8 +28,7 @@ def evaluate(scenario: ASlibScenario, approach, metrics, amount_of_training_inst
     np.random.seed(fold)
 
     logger.info("-----------------------------")
-    logger.info("Evaluating \"" + approach.get_name() + "\" fold " + str(fold) + " training on " + str(
-        amount_of_training_instances) + " scenario instances on scenario " + str(scenario.scenario))
+    logger.info('Evaluating "' + approach.get_name() + '" fold ' + str(fold) + " training on " + str(amount_of_training_instances) + " scenario instances on scenario " + str(scenario.scenario))
 
     if tune_hyperparameters:
         optimizer = HyperParameterOptimizer()
@@ -51,11 +52,7 @@ def print_stats_of_scenario(scenario: ASlibScenario):
 
 def evaluate_scenario(scenario_name: str, approach, metrics, amount_of_training_scenario_instances: int, fold: int, db_config, tune_hyperparameters: bool):
     scenario = ASlibScenario()
-    scenario.read_scenario('data/aslib_data-master/' + scenario_name)
+    scenario.read_scenario("data/aslib_data-master/" + scenario_name)
     print_stats_of_scenario(scenario)
     evaluate(scenario, approach, metrics, amount_of_training_scenario_instances, fold, db_config, tune_hyperparameters)
     return scenario_name
-
-
-
-

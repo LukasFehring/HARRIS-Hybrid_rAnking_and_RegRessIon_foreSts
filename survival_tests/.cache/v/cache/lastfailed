@@ -1,0 +1,6 @@
+{
+  "tests/approaches/combined_ranking_and_regression_trees/test_binary_decision_tree.py": true, 
+  "tests/approaches/combined_ranking_and_regression_trees/test_borda_score.py": true, 
+  "tests/approaches/combined_ranking_and_regression_trees/test_calculate_regression_error_loss.py": true, 
+  "tests/approaches/combined_ranking_and_regression_trees/test_ranking_transformer.py": true
+}

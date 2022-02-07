@@ -1,13 +1,15 @@
-from aslib_scenario.aslib_scenario import ASlibScenario
-from ax import *
 import copy
-import numpy as np
-from par_10_metric import Par10Metric
-from evaluation_of_train_test_split import evaluate_train_test_split
 import logging
 
-class HyperParameterOptimizer:
+import numpy as np
+from ax import *
 
+from aslib_scenario import ASlibScenario
+from evaluation_of_train_test_split import evaluate_train_test_split
+from par_10_metric import Par10Metric
+
+
+class HyperParameterOptimizer:
     def __init__(self):
         self.logger = logging.getLogger("hyper_parameter_optimizer")
         self.logger.addHandler(logging.StreamHandler())
@@ -40,37 +42,17 @@ class HyperParameterOptimizer:
         self.logger.debug("Optimizing parameters of approach " + str(approach.get_name()) + " on scenario " + str(scenario.scenario))
         search_space = SearchSpace(
             parameters=[
-                RangeParameter(
-                    name="n_estimators", parameter_type=ParameterType.INT, lower=10, upper=1000
-                ),
-                RangeParameter(
-                    name="min_samples_split", parameter_type=ParameterType.INT, lower=1, upper=100
-                ),
-                RangeParameter(
-                    name="min_samples_leaf", parameter_type=ParameterType.INT, lower=1, upper=100
-                ),
-                RangeParameter(
-                    name="min_weight_fraction_leaf", parameter_type=ParameterType.FLOAT, lower=0.0, upper=0.3
-                ),
-                ChoiceParameter(
-                    name="max_features", parameter_type=ParameterType.STRING, values=["auto", "sqrt", "log2"]
-                ),
-                FixedParameter(
-                    name="bootstrap", parameter_type=ParameterType.BOOL, value=True
-                ),
-                ChoiceParameter(
-                    name="oob_score", parameter_type=ParameterType.BOOL, values=[True, False]
-                )
+                RangeParameter(name="n_estimators", parameter_type=ParameterType.INT, lower=10, upper=1000),
+                RangeParameter(name="min_samples_split", parameter_type=ParameterType.INT, lower=1, upper=100),
+                RangeParameter(name="min_samples_leaf", parameter_type=ParameterType.INT, lower=1, upper=100),
+                RangeParameter(name="min_weight_fraction_leaf", parameter_type=ParameterType.FLOAT, lower=0.0, upper=0.3),
+                ChoiceParameter(name="max_features", parameter_type=ParameterType.STRING, values=["auto", "sqrt", "log2"]),
+                FixedParameter(name="bootstrap", parameter_type=ParameterType.BOOL, value=True),
+                ChoiceParameter(name="oob_score", parameter_type=ParameterType.BOOL, values=[True, False]),
             ]
         )
 
-        exp = SimpleExperiment(
-            name="find_survival_forest_hyper_params",
-            search_space=search_space,
-            evaluation_function=self.evaluate_parameters,
-            objective_name="par10",
-            minimize=True
-        )
+        exp = SimpleExperiment(name="find_survival_forest_hyper_params", search_space=search_space, evaluation_function=self.evaluate_parameters, objective_name="par10", minimize=True)
 
         sobol = Models.SOBOL(exp.search_space)
         for i in range(5):

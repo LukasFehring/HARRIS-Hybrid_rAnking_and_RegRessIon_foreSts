@@ -1,9 +1,9 @@
-from aslib_scenario.aslib_scenario import ASlibScenario
 import logging
+
+from aslib_scenario import ASlibScenario
 
 
 class Oracle:
-
     def __init__(self):
         self.logger = logging.getLogger("oracle")
         self.logger.addHandler(logging.StreamHandler())
