@@ -15,8 +15,4 @@ def modified_position_error(performance_data, borda_score, rankings):
 
 def spearman_rank_correlation(performance_data, borda_score, rankings):
     consensus_ranking = borda_score(rankings)
-    sum_of_diffs = 0
-    for ranking in rankings:
-        for algorithm_number in range(len(consensus_ranking)):
-            sum_of_diffs += (ranking[algorithm_number] - consensus_ranking[algorithm_number]) ** 2
-    return sum_of_diffs / len(rankings)
+    return np.sum((rankings - consensus_ranking) ** 2) / len(rankings)

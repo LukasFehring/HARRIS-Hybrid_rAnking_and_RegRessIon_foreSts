@@ -22,8 +22,8 @@ class BinaryDecisionTreeTest(unittest.TestCase):
         test_scenario_name = "QBF-2016"
         self.scenario.read_scenario(os.path.join("data", "aslib_data-master", test_scenario_name))
 
-        self.scenario.performance_data = self.scenario.performance_data.iloc[0:200]
-        self.scenario.feature_data = self.scenario.feature_data.iloc[0:200]
+        self.scenario.performance_data = self.scenario.performance_data
+        self.scenario.feature_data = self.scenario.feature_data
 
     def test_basic(self):
         start_time = time.time()
@@ -43,4 +43,4 @@ class BinaryDecisionTreeTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    cProfile.run("unittest.main()")
+    cProfile.run("unittest.main()", "profiler/profiler.gstat")

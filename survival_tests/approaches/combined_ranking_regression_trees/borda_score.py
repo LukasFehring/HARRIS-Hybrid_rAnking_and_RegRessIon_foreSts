@@ -1,20 +1,8 @@
-from pyrsistent import l
+import numpy as np
+from scipy.stats import rankdata
 
 
-def borda_score_mean(performance_data):
-    algorithm_score = {key: 0 for key in performance_data[0].keys()}
-
-    for instance in performance_data:
-        for algorithm, ranking in instance.items():
-            algorithm_score[algorithm] += ranking
-
-    max_val = max(algorithm_score.values())
-    borda_ranking = dict()
-    for position, key_value in enumerate(sorted(algorithm_score.items(),key=  lambda x: x[1])): #todo take care of duplicates
-        algorithm, ranking = key_value
-        if ranking == max_val:
-            borda_ranking[algorithm] = len(performance_data)
-        else:
-            borda_ranking[algorithm]= position
-
-    return borda_ranking
+def borda_score_mean(ranking_data: np.array):
+    ranking_sums = ranking_data.sum(axis=0)
+    consensus_ranking = rankdata(ranking_sums, "average")
+    return consensus_ranking

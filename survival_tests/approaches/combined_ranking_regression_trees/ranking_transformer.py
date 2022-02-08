@@ -1,33 +1,17 @@
 import numpy as np
 import pandas as pd
+from scipy.stats import rankdata
 
 
-def calculate_ranking_from_performance_data(performance_data: np.array):
-    def calculate_ranking_from_instance(instance, worst_performance):
-        worst_performance = performance_data.max()
-        grouped_algos = {x: [] for x in instance}
-        last_value = -1
-        for algo_number, x in enumerate(instance):
-            grouped_algos[x].append(algo_number)
-        ranking = {}
-        counter = 0
-        for group_number, algo_numbers in sorted(grouped_algos.items(), key=lambda x: x[0]):
-            if group_number == worst_performance:
-                for algo_number in algo_numbers:
-                    ranking[algo_number] = np.ma.size(performance_data, axis=1)
-            elif len(algo_numbers) == 1:
-                ranking[algo_numbers[0]] = counter
-                counter += 1
-            else:
-                avg = sum(range(counter, len(algo_numbers) + counter)) / len(algo_numbers)
-                for x in algo_numbers:
-                    ranking[x] = avg
-                counter += len(algo_numbers)
-
+def calculate_ranking_from_performance_data(performance_data: np.array):  # todo modify this to be a np array
+    def calculate_ranking_from_instance(instance):
+        ranking = rankdata(instance, "average") - 1
+        ranking_max = rankdata(instance, "max") - 1
+        ranking_max = ranking_max == len(instance) - 1
+        ranking[ranking_max] = len(instance) - 1
         return ranking
 
     ranked_instances = list()
-    worst_performance = performance_data.max()
     for instance in performance_data:
-        ranked_instances.append(calculate_ranking_from_instance(instance, worst_performance))
-    return ranked_instances
+        ranked_instances.append(calculate_ranking_from_instance(instance))
+    return np.array(ranked_instances)

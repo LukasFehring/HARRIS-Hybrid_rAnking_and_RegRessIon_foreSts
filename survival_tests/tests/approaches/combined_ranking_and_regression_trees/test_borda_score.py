@@ -1,6 +1,8 @@
 import os
 import unittest
 
+import numpy as np
+
 from approaches.combined_ranking_regression_trees.borda_score import borda_score_mean
 from approaches.combined_ranking_regression_trees.ranking_transformer import calculate_ranking_from_performance_data
 from aslib_scenario import ASlibScenario
@@ -16,37 +18,8 @@ class TestRankingTransformer(unittest.TestCase):
 
     def test_borda_score_mean(self):
         borda_ranking = borda_score_mean(self.ranking_data)
-        self.assertEqual(
-            borda_ranking,
-            {
-                19: 0,
-                18: 1,
-                4: 2,
-                5: 3,
-                3: 4,
-                6: 5,
-                8: 6,
-                13: 7,
-                22: 8,
-                23: 9,
-                10: 10,
-                24: 11,
-                7: 12,
-                21: 13,
-                9: 14,
-                25: 15,
-                20: 16,
-                2: 17,
-                15: 18,
-                14: 19,
-                17: 20,
-                16: 21,
-                0: 22,
-                1: 23,
-                11: 20,
-                12: 20,
-                26: 20,
-                27: 20,
-                28: 20,
-            },
+        self.assertTrue(
+            np.array_equal(
+                borda_ranking, [23.0, 24.0, 18.0, 5.0, 4.0, 3.0, 6.0, 13.0, 7.0, 15.0, 11.0, 27.0, 27.0, 8.0, 20.0, 19.0, 22.0, 21.0, 2.0, 1.0, 17.0, 14.0, 9.5, 9.5, 12.0, 16.0, 27.0, 27.0, 27.0]
+            )
         )
