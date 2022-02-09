@@ -41,6 +41,10 @@ class BinaryDecisionTreeTest(unittest.TestCase):
         print("execution_time", end_time - start_time)
         self.assertIsInstance(binary_decision_tree, BinaryDecisionTree)
 
+        prediction_instance = self.scenario.feature_data.iloc[3].values
+        predicted_label = binary_decision_tree.predict(prediction_instance, None)
+        pass
+
 
 if __name__ == "__main__":
     cProfile.run("unittest.main()", "profiler/profiler.gstat")

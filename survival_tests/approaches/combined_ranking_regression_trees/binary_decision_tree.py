@@ -6,9 +6,10 @@ from xml.sax.handler import feature_external_ges
 
 import numpy as np
 import pandas as pd
-from pyexpat import features
-from sqlalchemy import false
+from sklearn import preprocessing
+from sklearn.impute import SimpleImputer
 
+from approaches.combined_ranking_regression_trees.calculate_label import node_label
 from approaches.combined_ranking_regression_trees.ranking_transformer import calculate_ranking_from_performance_data
 from approaches.combined_ranking_regression_trees.regression_error_loss import regression_error_loss
 from aslib_scenario import ASlibScenario
@@ -16,15 +17,12 @@ from aslib_scenario import ASlibScenario
 
 class BinaryDecisionTree:
     def __init__(self, ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, calculate_label=None, min_sample_leave=3, min_sample_split=7):
-        # values to be filled in training
-        self.is_split = false
         self.left = None
         self.right = None
         self.splitting_feature = None
         self.splitting_value = None
         self.train_scenario = None
         self.fold = None
-        self.amount_of_training_instances = None
         self.label = None
         self.min_sample_leave = min_sample_leave
         self.min_sample_split = min_sample_split
@@ -38,6 +36,15 @@ class BinaryDecisionTree:
         self.calculate_label = calculate_label
 
     def fit(self, train_scenario: ASlibScenario, fold, amount_of_training_instances, depth=0):
+        def scenario_preporcessing():
+            self.imputer = SimpleImputer()
+            transformed_features = self.imputer.fit_transform(train_scenario.feature_data)
+
+            # standardize feature values
+            self.scaler = preprocessing.StandardScaler()
+            transformed_features = self.scaler.fit_transform(transformed_features)
+            return transformed_features
+
         def split_by_feature_value(feature_data, splitting_point):
             smaller_feature_instances = feature_data < splitting_point
             bigger_feature_instances = feature_data >= splitting_point
@@ -46,40 +53,38 @@ class BinaryDecisionTree:
             # first calculate rows which are above below split point
             # then split the performance_data dataframe
 
-        def calculate_loss(performance_data, smaller_instances, bigger_instances, rankings):
-            def regression_loss(performance_data, smaller_instances, bigger_instances):
+        def calculate_loss(performance_data, rankings, smaller_feature_instances, bigger_feature_instances, smaller_ranking_instances, bigger_ranking_instances):
+            def regression_loss():
                 if self.impact_factor == 1:
                     return 0
                 else:
-                    smaller_feature_instances = performance_data[smaller_instances]
-                    bigger_feature_instances = performance_data[bigger_instances]
                     smaller_regression_error_loss = regression_error_loss(smaller_feature_instances) * len(smaller_feature_instances) / len(performance_data)
                     bigger_regression_error_loss = regression_error_loss(bigger_feature_instances) * len(bigger_feature_instances) / len(performance_data)
 
                     return smaller_regression_error_loss + bigger_regression_error_loss
 
-            def ranking_loss(performance_data, smaller_instances, bigger_instances, rankings):
+            def ranking_loss():
                 if self.impact_factor == 0:
                     return 0
                 else:
-                    smaller_feature_instances = performance_data[smaller_instances]
-                    bigger_feature_instances = performance_data[bigger_instances]
-                    smaller_ranking_instances = rankings[smaller_instances]
-                    bigger_ranking_instances = rankings[bigger_instances]
-
                     smaller_ranking_loss = self.ranking_loss(smaller_feature_instances, self.borda_score, smaller_ranking_instances) * len(smaller_feature_instances) / len(performance_data)
                     bigger_ranking_loss = self.ranking_loss(bigger_feature_instances, self.borda_score, bigger_ranking_instances) * len(bigger_feature_instances) / len(performance_data)
 
                     return smaller_ranking_loss + bigger_ranking_loss
 
-            regression_error = regression_loss(performance_data, smaller_instances, bigger_instances)
-            ranking_error = ranking_loss(performance_data, smaller_instances, bigger_instances, rankings)
+            regression_error = regression_loss()
+            ranking_error = ranking_loss()
             return self.impact_factor * ranking_error + (1 - self.impact_factor) * regression_error
 
         def evaluate_splitting_point(performance_data, feature_data, splitting_point, rankings):
             smaller_instances, bigger_instances = split_by_feature_value(feature_data, splitting_point)
 
-            loss = calculate_loss(performance_data, smaller_instances, bigger_instances, rankings)
+            smaller_feature_instances = performance_data[smaller_instances]
+            bigger_feature_instances = performance_data[bigger_instances]
+            smaller_ranking_instances = rankings[smaller_instances]
+            bigger_ranking_instances = rankings[bigger_instances]
+
+            loss = calculate_loss(performance_data, rankings, smaller_feature_instances, bigger_feature_instances, smaller_ranking_instances, bigger_ranking_instances)
             return loss
 
         def get_candidate_splitting_points(feature_data: np.array, min_sample_leave):
@@ -109,18 +114,20 @@ class BinaryDecisionTree:
             feature_data = filter_feature_data(feature_data)
             return feature_data
 
-        self.fold = fold  # todo what is this paramerer
-        self.amount_of_training_instances = amount_of_training_instances
+        if depth == 0:
+            feature_data = scenario_preporcessing()
+        else:
+            feature_data = train_scenario.feature_data.values
 
+        performance_data = train_scenario.performance_data.values
+
+        self.fold = fold
         self.instance_number_map = {i: name for i, name in enumerate(train_scenario.instances)}
         self.feature_number_map = {i: name for i, name in enumerate(train_scenario.features)}
 
-        performance_data = train_scenario.performance_data.values
-        feature_data = train_scenario.feature_data.values
         rankings = calculate_ranking_from_performance_data(performance_data)
         if self.stopping_criterion(performance_data, self.min_sample_split):
-            # self.label = self.calculate_label(performance_data, rankings)
-            pass
+            self.label = np.average(performance_data, axis=0)
         else:
             best_known_split_loss = math.inf
             counter = 0
@@ -137,6 +144,8 @@ class BinaryDecisionTree:
                         best_known_split_feature = feature
                         best_known_split_point = splitting_point
 
+            self.splitting_feature = best_known_split_feature
+            self.splitting_value = best_known_split_point
             smaller_instances, bigger_instances = split_by_feature_value(feature_data[:, best_known_split_feature], best_known_split_point)
 
             smaller_scenario = deepcopy(train_scenario)
@@ -150,11 +159,19 @@ class BinaryDecisionTree:
             self.left = BinaryDecisionTree(self.ranking_loss, self.regression_loss, self.borda_score, self.impact_factor, self.stopping_criterion)
             self.right = BinaryDecisionTree(self.ranking_loss, self.regression_loss, self.borda_score, self.impact_factor, self.stopping_criterion)
 
-            self.left.fit(smaller_scenario, self.fold, self.amount_of_training_instances, depth=depth + 1)
+            self.left.fit(smaller_scenario, self.fold, amount_of_training_instances, depth=depth + 1)
 
-            self.right.fit(bigger_scenario, self.fold, self.amount_of_training_instances, depth=depth + 1)
+            self.right.fit(bigger_scenario, self.fold, amount_of_training_instances, depth=depth + 1)
 
         return self
 
-    def predict(self, scenario):
-        pass
+    def predict(self, features: np.array, scenario):
+        assert features.ndim == 1, "Must be 1-dimensional"
+        if self.label is not None:
+            return self.label
+
+        else:
+            if features[self.splitting_feature] < self.splitting_value:
+                return self.left.predict(features, scenario)
+            else:
+                return self.left.predict(features, scenario)
