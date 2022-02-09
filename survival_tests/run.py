@@ -3,6 +3,11 @@ import logging
 import multiprocessing as mp
 import os
 
+from approaches.combined_ranking_regression_trees.borda_score import borda_score_mean
+from approaches.combined_ranking_regression_trees.ranking_loss import spearman_rank_correlation
+from approaches.combined_ranking_regression_trees.regression_error_loss import regression_error_loss
+from approaches.combined_ranking_regression_trees.stopping_criteria import loss_under_threshold
+
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
@@ -86,7 +91,14 @@ def create_approach(approach_names):
         if approach_name == "isac":
             approaches.append(ISAC())
         if approach_name == "binary_decision_tree_combined_loss":
-            approaches.append(BinaryDecisionTree())
+            basinc_ranking_loss = spearman_rank_correlation
+            basic_regression_loss = regression_error_loss
+            basic_borda_score = borda_score_mean
+            basic_impact_factor = 0.9
+            basic_stopping_criterion = loss_under_threshold
+            binary_decision_tree = BinaryDecisionTree(basinc_ranking_loss, basic_regression_loss, basic_borda_score, basic_impact_factor, basic_stopping_criterion)
+            approaches.append(binary_decision_tree)
+
     return approaches
 
 
@@ -98,7 +110,7 @@ initialize_logging()
 config = load_configuration()
 logger.info("Running experiments with config:")
 print_config(config)
-
+debug_mode = True
 # fold = int(sys.argv[1])
 # logger.info("Running experiments for fold " + str(fold))
 
@@ -127,11 +139,15 @@ for fold in range(1, 11):
             if approach.get_name() != "oracle":
                 metrics.append(NumberUnsolvedInstances(False))
                 metrics.append(NumberUnsolvedInstances(True))
-            logger.info('Submitted pool task for approach "' + str(approach.get_name()) + '" on scenario: ' + scenario)
-            pool.apply_async(evaluate_scenario, args=(scenario, approach, metrics, amount_of_scenario_training_instances, fold, config, tune_hyperparameters), callback=log_result)
-            # evaluate_scenario(scenario, approach, metrics,
-            #                 amount_of_scenario_training_instances, fold, config, tune_hyperparameters)
-            print("Finished evaluation of fold")
+
+            if debug_mode:
+                evaluate_scenario(scenario, approach, metrics, amount_of_scenario_training_instances, fold, config, tune_hyperparameters)
+                print("Finished evaluation of fold")
+            else:
+                logger.info('Submitted pool task for approach "' + str(approach.get_name()) + '" on scenario: ' + scenario)
+                pool.apply_async(evaluate_scenario, args=(scenario, approach, metrics, amount_of_scenario_training_instances, fold, config, tune_hyperparameters), callback=log_result)
+
+                print("Finished evaluation of fold")
 
 pool.close()
 pool.join()
