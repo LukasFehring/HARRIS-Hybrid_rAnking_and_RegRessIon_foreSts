@@ -15,7 +15,7 @@ from aslib_scenario import ASlibScenario
 
 
 class BinaryDecisionTree:
-    def __init__(self, ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, calculate_label=None, min_sample_leave=3, min_sample_split=7):
+    def __init__(self, ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, min_sample_leave=3, min_sample_split=7):
         self.left = None
         self.right = None
         self.splitting_feature = None
@@ -34,7 +34,9 @@ class BinaryDecisionTree:
         self.regression_loss = regression_loss
         self.borda_score = borda_score
         self.stopping_criterion = stopping_criterion
-        self.calculate_label = calculate_label
+
+    def get_name(self):
+        return f"BinaryDecisionTree with rankings loss {self.ranking_loss}, impact factor {self.impact_factor}, and borda score {self.borda_score}"
 
     def fit(self, train_scenario: ASlibScenario, fold, amount_of_training_instances, depth=0):
         def scenario_preporcessing():
@@ -90,29 +92,12 @@ class BinaryDecisionTree:
 
         def get_candidate_splitting_points(feature_data: np.array, min_sample_leave):
             def filter_feature_data(feature_data):
-                if len(np.unique(feature_data)) <= 1:
-                    return []
-                split_value = feature_data[min_sample_leave - 2]
-                lower_bound = min_sample_leave
-                if feature_data[min_sample_leave - 1] == split_value:
-                    for val_number, value in enumerate(feature_data):
-                        if value > split_value:
-                            lower_bound = val_number
-                            break
-                split_value = feature_data[-min_sample_leave]
-                higher_bound = -min_sample_leave
-                if feature_data[-min_sample_leave + 1] == split_value:
-                    for val_number in range(len(feature_data) - 1, 0, -1):
-                        value = feature_data[val_number]
-                        if value < split_value:
-                            higher_bound = val_number
-                            break
-                return feature_data[lower_bound:higher_bound]
+                return feature_data[min_sample_leave:-min_sample_leave]
 
-            nan_array: np.array = np.isnan(feature_data)
-            feature_data = feature_data[~nan_array]
             feature_data.sort()
             feature_data = filter_feature_data(feature_data)
+            if feature_data.size == 0:
+                raise ValueError(f"the given possible features are not compatible with min_sample_leave {min_sample_leave}")
             return feature_data
 
         if depth == 0:
@@ -132,12 +117,16 @@ class BinaryDecisionTree:
         else:
             best_known_split_loss = math.inf
             counter = 0
-
+            splitting_point_amount = None
             for feature in range(len(train_scenario.features)):
                 candidate_splitting_points = get_candidate_splitting_points(feature_data[:, feature], self.min_sample_leave)
+                if splitting_point_amount is None:
+                    splitting_point_amount = len(candidate_splitting_points) * len(train_scenario.features)
+
                 for splitting_point in candidate_splitting_points:
                     split_loss = evaluate_splitting_point(performance_data, feature_data[:, feature], splitting_point, rankings)
                     counter += 1
+
                     print(f"split number {counter} of {len(candidate_splitting_points) * len(train_scenario.features )}")
 
                     if split_loss < best_known_split_loss:
