@@ -23,14 +23,16 @@ class BinaryDecisionTree:
         self.train_scenario = None
         self.fold = None
         self.label = None
+
+        # parameters
         self.min_sample_leave = min_sample_leave
         self.min_sample_split = min_sample_split
+        self.impact_factor = impact_factor
 
         # functions used in training
         self.ranking_loss = ranking_loss
         self.regression_loss = regression_loss
         self.borda_score = borda_score
-        self.impact_factor = impact_factor
         self.stopping_criterion = stopping_criterion
         self.calculate_label = calculate_label
 
@@ -52,13 +54,13 @@ class BinaryDecisionTree:
             # first calculate rows which are above below split point
             # then split the performance_data dataframe
 
-        def calculate_loss(performance_data, rankings, smaller_feature_instances, bigger_feature_instances, smaller_ranking_instances, bigger_ranking_instances):
+        def calculate_loss(performance_data, smaller_performance_instances, bigger_performance_instances, smaller_ranking_instances, bigger_ranking_instances):
             def regression_loss():
                 if self.impact_factor == 1:
                     return 0
                 else:
-                    smaller_regression_error_loss = regression_error_loss(smaller_feature_instances) * len(smaller_feature_instances) / len(performance_data)
-                    bigger_regression_error_loss = regression_error_loss(bigger_feature_instances) * len(bigger_feature_instances) / len(performance_data)
+                    smaller_regression_error_loss = regression_error_loss(smaller_performance_instances) * len(smaller_performance_instances) / len(performance_data)
+                    bigger_regression_error_loss = regression_error_loss(bigger_performance_instances) * len(bigger_performance_instances) / len(performance_data)
 
                     return smaller_regression_error_loss + bigger_regression_error_loss
 
@@ -66,8 +68,8 @@ class BinaryDecisionTree:
                 if self.impact_factor == 0:
                     return 0
                 else:
-                    smaller_ranking_loss = self.ranking_loss(smaller_feature_instances, self.borda_score, smaller_ranking_instances) * len(smaller_feature_instances) / len(performance_data)
-                    bigger_ranking_loss = self.ranking_loss(bigger_feature_instances, self.borda_score, bigger_ranking_instances) * len(bigger_feature_instances) / len(performance_data)
+                    smaller_ranking_loss = self.ranking_loss(smaller_performance_instances, self.borda_score, smaller_ranking_instances) * len(smaller_performance_instances) / len(performance_data)
+                    bigger_ranking_loss = self.ranking_loss(bigger_performance_instances, self.borda_score, bigger_ranking_instances) * len(bigger_performance_instances) / len(performance_data)
 
                     return smaller_ranking_loss + bigger_ranking_loss
 
@@ -78,12 +80,12 @@ class BinaryDecisionTree:
         def evaluate_splitting_point(performance_data, feature_data, splitting_point, rankings):
             smaller_instances, bigger_instances = split_by_feature_value(feature_data, splitting_point)
 
-            smaller_feature_instances = performance_data[smaller_instances]
-            bigger_feature_instances = performance_data[bigger_instances]
+            smaller_performance_instances = performance_data[smaller_instances]
+            smaller_performance_instances = performance_data[bigger_instances]
             smaller_ranking_instances = rankings[smaller_instances]
             bigger_ranking_instances = rankings[bigger_instances]
 
-            loss = calculate_loss(performance_data, rankings, smaller_feature_instances, bigger_feature_instances, smaller_ranking_instances, bigger_ranking_instances)
+            loss = calculate_loss(performance_data, smaller_performance_instances, smaller_performance_instances, smaller_ranking_instances, bigger_ranking_instances)
             return loss
 
         def get_candidate_splitting_points(feature_data: np.array, min_sample_leave):
