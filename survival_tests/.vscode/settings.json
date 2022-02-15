@@ -9,6 +9,7 @@
     "python.testing.unittestEnabled": true,
     "cSpell.words": [
         "aslib",
+        "ndarray",
         "scipy"
     ],
     "terminal.integrated.env.linux": {
