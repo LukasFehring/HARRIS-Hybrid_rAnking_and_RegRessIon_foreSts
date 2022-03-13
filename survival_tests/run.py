@@ -3,8 +3,9 @@ import logging
 import multiprocessing as mp
 import os
 
-from approaches.combined_ranking_regression_trees.borda_score import borda_score_mean
-from approaches.combined_ranking_regression_trees.ranking_loss import spearman_rank_correlation
+from approaches.combined_ranking_regression_trees.borda_score import borda_score_mean_performance, borda_score_mean_ranking, borda_score_median_ranking, geometric_mean_performance
+from approaches.combined_ranking_regression_trees.evaulation_metrices import NDCG, KendallsTau_b, Performance_Regret
+from approaches.combined_ranking_regression_trees.ranking_loss import modified_position_error, spearman_footrule, spearman_rank_correlation
 from approaches.combined_ranking_regression_trees.regression_error_loss import regression_error_loss
 from approaches.combined_ranking_regression_trees.stopping_criteria import loss_under_threshold
 
@@ -91,13 +92,13 @@ def create_approach(approach_names):
         if approach_name == "isac":
             approaches.append(ISAC())
         if approach_name == "binary_decision_tree_combined_loss":
-            basinc_ranking_loss = spearman_rank_correlation
-            basic_regression_loss = regression_error_loss
-            basic_borda_score = borda_score_mean
-            basic_impact_factor = 0.9
-            basic_stopping_criterion = loss_under_threshold
-            binary_decision_tree = BinaryDecisionTree(basinc_ranking_loss, basic_regression_loss, basic_borda_score, basic_impact_factor, basic_stopping_criterion)
-            approaches.append(binary_decision_tree)
+            for ranking_loss in [spearman_rank_correlation, modified_position_error, spearman_rank_correlation, spearman_footrule]:
+                for regression_loss in [borda_score_mean_ranking, borda_score_median_ranking, borda_score_mean_performance, geometric_mean_performance]:
+                    for basic_impact_factor in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+                        basic_borda_score = borda_score_mean_ranking
+                        basic_stopping_criterion = loss_under_threshold
+                        binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, basic_borda_score, basic_impact_factor, basic_stopping_criterion)
+                        approaches.append(binary_decision_tree)
 
     return approaches
 
@@ -110,7 +111,7 @@ initialize_logging()
 config = load_configuration()
 logger.info("Running experiments with config:")
 print_config(config)
-debug_mode = True
+debug_mode = False
 # fold = int(sys.argv[1])
 # logger.info("Running experiments for fold " + str(fold))
 
@@ -136,6 +137,9 @@ for fold in range(1, 11):
         for approach in approaches:
             metrics = list()
             metrics.append(Par10Metric())
+            metrics.append(NDCG())
+            metrics.append(KendallsTau_b())
+            metrics.append(Performance_Regret())
             if approach.get_name() != "oracle":
                 metrics.append(NumberUnsolvedInstances(False))
                 metrics.append(NumberUnsolvedInstances(True))
@@ -145,7 +149,9 @@ for fold in range(1, 11):
                 print("Finished evaluation of fold")
             else:
                 logger.info('Submitted pool task for approach "' + str(approach.get_name()) + '" on scenario: ' + scenario)
-                pool.apply_async(evaluate_scenario, args=(scenario, approach, metrics, amount_of_scenario_training_instances, fold, config, tune_hyperparameters), callback=log_result)
+                pool.apply_async(
+                    evaluate_scenario, args=(scenario, approach, metrics, amount_of_scenario_training_instances, fold, config, tune_hyperparameters), callback=log_result
+                )  
 
                 print("Finished evaluation of fold")
 

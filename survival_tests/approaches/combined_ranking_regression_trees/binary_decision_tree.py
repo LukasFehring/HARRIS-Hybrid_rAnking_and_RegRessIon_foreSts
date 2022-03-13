@@ -87,8 +87,8 @@ class BinaryDecisionTree:
             self.imputer = SimpleImputer()
             transformed_features = self.imputer.fit_transform(train_scenario.feature_data.values)
 
-            self.scaler = preprocessing.StandardScaler()
-            transformed_features = self.scaler.fit_transform(transformed_features)
+            # self.scaler = preprocessing.StandardScaler()
+            # transformed_features = self.scaler.fit_transform(transformed_features) #todo einkommentieren wenn ich das ganze auswerte
             return transformed_features
 
         def split_by_feature_value(feature_data, splitting_point):
@@ -133,6 +133,7 @@ class BinaryDecisionTree:
 
         if depth == 0:
             feature_data = scenario_preporcessing()
+            train_scenario.feature_data = pd.DataFrame(feature_data)
         else:
             feature_data = train_scenario.feature_data.values
 
@@ -148,24 +149,21 @@ class BinaryDecisionTree:
         else:
             best_known_split_loss = math.inf
             counter = 0
-            splitting_point_amount = None
             for feature in range(len(train_scenario.features)):
                 candidate_splitting_points = self.get_candidate_splitting_points(feature_data[:, feature])
-                # if splitting_point_amount is None:
-                #    splitting_point_amount = len(candidate_splitting_points) * len(train_scenario.features)
 
                 for splitting_point in candidate_splitting_points:
                     split_loss = evaluate_splitting_point(performance_data, feature_data[:, feature], splitting_point, rankings)
                     counter += 1
 
-                    # print(f"split number {counter} of {len(candidate_splitting_points) * len(train_scenario.features )}")
-
                     if split_loss < best_known_split_loss:
                         best_known_split_loss = split_loss
                         best_known_split_feature = feature
                         best_known_split_point = splitting_point
-
-            self.splitting_feature = best_known_split_feature
+            try:
+                self.splitting_feature = best_known_split_feature
+            except UnboundLocalError:
+                self.get_candidate_splitting_points(feature_data[:, feature])
             self.splitting_value = best_known_split_point
             smaller_instances, bigger_instances = split_by_feature_value(feature_data[:, best_known_split_feature], best_known_split_point)
 
@@ -187,6 +185,8 @@ class BinaryDecisionTree:
         return self
 
     def predict(self, features: np.array, scenario):
+
+        "ALGO DER AM BESTEN IST SOLLTE DEN NIEDRIGSTEM SCORE HABEN  - ich kann hier aber auch andere sachen machen, die dann"
         assert features.ndim == 1, "Must be 1-dimensional"
         if self.label is not None:
             return self.label
@@ -195,4 +195,4 @@ class BinaryDecisionTree:
             if features[self.splitting_feature] < self.splitting_value:
                 return self.left.predict(features, scenario)
             else:
-                return self.left.predict(features, scenario)
+                return self.right.predict(features, scenario)

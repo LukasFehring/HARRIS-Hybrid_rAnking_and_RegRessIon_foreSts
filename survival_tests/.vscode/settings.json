@@ -10,6 +10,7 @@
     "cSpell.words": [
         "aslib",
         "ndarray",
+        "ndcg",
         "scipy"
     ],
     "terminal.integrated.env.linux": {
