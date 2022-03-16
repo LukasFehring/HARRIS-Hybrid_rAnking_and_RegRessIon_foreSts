@@ -3,6 +3,7 @@ import logging
 import numpy as np
 
 import database_utils
+from approaches.combined_ranking_regression_trees.binary_decision_tree import BinaryDecisionTree
 from aslib_scenario import ASlibScenario
 from evaluation_of_train_test_split import evaluate_train_test_split
 from hyperparameter_optimizer import HyperParameterOptimizer
@@ -11,12 +12,29 @@ logger = logging.getLogger("evaluation")
 logger.addHandler(logging.StreamHandler())
 
 
-def publish_results_to_database(db_config, scenario_name: str, fold: int, approach: str, metric_name: str, result: float):
+def publish_results_to_database(approach, db_config, scenario_name: str, fold: int, approach_name: str, metric_name: str, result: float):
     db_handle, table_name = database_utils.initialize_mysql_db_and_table_name_from_config(db_config)
 
     db_cursor = db_handle.cursor()
-    sql_statement = "INSERT INTO " + table_name + " (scenario_name, fold, approach, metric, result) VALUES (%s, %s, %s, %s, %s)"
-    values = (scenario_name, fold, approach, metric_name, str(result))
+    if "BinaryDecisionTree" in approach.get_name():
+        approach: BinaryDecisionTree = approach
+        sql_statement = (
+            "INSERT INTO " + table_name + " (scenario_name, fold, approach, metric, impact_factor, ranking_error, borda_score, stopping_criteria, result) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        )
+        values = (
+            scenario_name,
+            fold,
+            approach.get_name(),
+            metric_name,
+            approach.impact_factor,
+            approach.ranking_loss.__name__,
+            approach.borda_score.__name__,
+            approach.stopping_criterion.__name__,
+            str(result),
+        )
+    else:
+        sql_statement = "INSERT INTO " + table_name + " (scenario_name, fold, approach, metric, result) VALUES (%s, %s, %s, %s, %s)"
+        values = (scenario_name, fold, approach_name, metric_name, str(result))
     db_cursor.execute(sql_statement, values)
     db_handle.commit()
 
@@ -39,7 +57,7 @@ def evaluate(scenario: ASlibScenario, approach, metrics, amount_of_training_inst
     metric_results = evaluate_train_test_split(scenario, approach, metrics, fold, amount_of_training_instances, train_status)
 
     for i, result in enumerate(metric_results):
-        publish_results_to_database(db_config, scenario.scenario, fold, approach.get_name(), metrics[i].get_name(), result)
+        publish_results_to_database(approach, db_config, scenario.scenario, fold, approach.get_name(), metrics[i].get_name(), result)
 
 
 def print_stats_of_scenario(scenario: ASlibScenario):

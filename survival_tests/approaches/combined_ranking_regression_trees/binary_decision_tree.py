@@ -80,7 +80,7 @@ class BinaryDecisionTree:
         return feature_data
 
     def get_name(self):
-        return f"BinaryDecisionTree with rankings loss {self.ranking_loss}, impact factor {self.impact_factor}, and borda score {self.borda_score}"
+        return f"BinaryDecisionTree"
 
     def fit(self, train_scenario: ASlibScenario, fold, amount_of_training_instances, depth=0):
         def scenario_preporcessing():
@@ -185,8 +185,6 @@ class BinaryDecisionTree:
         return self
 
     def predict(self, features: np.array, scenario):
-
-        "ALGO DER AM BESTEN IST SOLLTE DEN NIEDRIGSTEM SCORE HABEN  - ich kann hier aber auch andere sachen machen, die dann"
         assert features.ndim == 1, "Must be 1-dimensional"
         if self.label is not None:
             return self.label
