@@ -1,12 +1,15 @@
 import math
-import sys
-from cmath import atanh
+import os
 from copy import deepcopy
 from xml.sax.handler import feature_external_ges
 
+#
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+#
+
 import numpy as np
 import pandas as pd
-from sklearn import preprocessing
 from sklearn.impute import SimpleImputer
 
 from approaches.combined_ranking_regression_trees.ranking_transformer import calculate_ranking_from_performance_data
@@ -15,7 +18,7 @@ from aslib_scenario import ASlibScenario
 
 
 class BinaryDecisionTree:
-    def __init__(self, ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, min_sample_leave=3, min_sample_split=7):
+    def __init__(self, ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, min_sample_leave=3, min_sample_split=7, stopping_threshold = None):
         self.left = None
         self.right = None
         self.splitting_feature = None
@@ -28,6 +31,7 @@ class BinaryDecisionTree:
         self.min_sample_leave = min_sample_leave
         self.min_sample_split = min_sample_split
         self.impact_factor = impact_factor
+        self.stopping_threshold = stopping_threshold
 
         # functions used in training
         self.ranking_loss = ranking_loss
@@ -35,7 +39,7 @@ class BinaryDecisionTree:
         self.borda_score = borda_score
         self.stopping_criterion = stopping_criterion
 
-    def get_candidate_splitting_points(self, feature_data: np.array):  # todo write a testcase for this. parametrized with a bunch of different values
+    def get_candidate_splitting_points(self, feature_data: np.array):
         def filter_feature_data(feature_data):
             lower_split = self.min_sample_leave
 
@@ -51,7 +55,7 @@ class BinaryDecisionTree:
                         last_val = feature_data[lower_split]
                         if last_val > old_val:
                             finished = True
-                    except LookupError as e:
+                    except (LookupError, IndexError) as e:
                         return np.array([], np.float64)
 
             higher_split = -self.min_sample_leave
@@ -80,7 +84,7 @@ class BinaryDecisionTree:
         return feature_data
 
     def get_name(self):
-        return f"BinaryDecisionTree"
+        return "BinaryDecisionTree"
 
     def fit(self, train_scenario: ASlibScenario, fold, amount_of_training_instances, depth=0):
         def scenario_preporcessing():
@@ -144,17 +148,15 @@ class BinaryDecisionTree:
         self.feature_number_map = {i: name for i, name in enumerate(train_scenario.features)}
 
         rankings = calculate_ranking_from_performance_data(performance_data)
-        if self.stopping_criterion(performance_data, self.min_sample_split):
+        if self.stopping_criterion(performance_data, self.min_sample_split, self.impact_factor, depth=depth, threshold=self.stopping_threshold):
             self.label = np.average(performance_data, axis=0)
         else:
             best_known_split_loss = math.inf
-            counter = 0
             for feature in range(len(train_scenario.features)):
                 candidate_splitting_points = self.get_candidate_splitting_points(feature_data[:, feature])
 
                 for splitting_point in candidate_splitting_points:
                     split_loss = evaluate_splitting_point(performance_data, feature_data[:, feature], splitting_point, rankings)
-                    counter += 1
 
                     if split_loss < best_known_split_loss:
                         best_known_split_loss = split_loss

@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 from matplotlib.pyplot import sci
 from sklearn.base import clone
-from sklearn.ensemble import RandomForestRegressor
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
+from sklearn.tree import DecisionTreeRegressor
 from sklearn.utils import resample
 
 from aslib_scenario import ASlibScenario
@@ -15,7 +15,9 @@ from .utils import distr_func, impute_censored
 
 
 class PerAlgorithmRegressor:
-    def __init__(self, scikit_regressor=RandomForestRegressor(n_jobs=1, n_estimators=100), impute_censored=False):
+    def __init__(
+        self, scikit_regressor=DecisionTreeRegressor(), impute_censored=False
+    ):
         self.scikit_regressor = scikit_regressor
         self.logger = logging.getLogger("per_algorithm_regressor")
         self.logger.addHandler(logging.StreamHandler())

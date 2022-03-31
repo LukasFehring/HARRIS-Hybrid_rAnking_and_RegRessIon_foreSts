@@ -33,6 +33,6 @@ def create_table_if_not_exists(db_handle, table_name: str):
         db_cursor.execute(
             "CREATE TABLE "
             + table_name
-            + " (scenario_name VARCHAR(255) NOT NULL, fold int NOT NULL, approach VARCHAR(255) NOT NULL, metric VARCHAR(255) NOT NULL, impact_factor int, ranking_error VARCHAR(255), borda_score VARCHAR(255), stopping_criteria VARCHAR(255), result double NOT NULL)"
+            + " (scenario_name VARCHAR(255) NOT NULL, fold int NOT NULL, approach VARCHAR(255) NOT NULL, metric VARCHAR(255) NOT NULL, impact_factor FLOAT, ranking_error VARCHAR(255), borda_score VARCHAR(255), stopping_criteria VARCHAR(255), result double)"
         )
         logger.info("Successfully created table '%s'.", table_name)

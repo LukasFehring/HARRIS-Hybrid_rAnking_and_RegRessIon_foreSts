@@ -1,9 +1,9 @@
 import math
+from copy import deepcopy
 
 import numpy as np
 from scipy.stats import kendalltau, rankdata
-
-# from sklearn.metrics import ndcg_score todo kann ich das irgendwie doch nehmen obwohl ne andere python libary version unterliegt?
+from sklearn.preprocessing import minmax_scale
 
 
 class KendallsTau_b:
@@ -22,30 +22,15 @@ class KendallsTau_b:
 
 
 class NDCG:
-    def evaluate(self, gt_runtimes: np.ndarray, predicted_scores: np.ndarray, feature_cost: float, algorithm_cutoff_time: int):
-        def ndcg(y_true, y_pred):
-            n_instances, n_objects = y_true.shape
-            relevance = np.power(2.0, ((n_objects - y_true) * 60) / n_objects) - 1.0
-            relevance_pred = np.power(2.0, ((n_objects - y_pred) * 60) / n_objects) - 1.0
+    def evaluate(self, gt_scores: np.ndarray, predicted_scores: np.ndarray, feature_cost: float, algorithm_cutoff_time: int):
+        predicted_scores = np.array(deepcopy(predicted_scores))
+        gt_scores = np.array(minmax_scale(gt_scores, feature_range=(0, 1)))
 
-            log_term = np.log(np.arange(dtype="float32") + 2.0) / np.log(2.0)
+        predicted_ranking = rankdata(predicted_scores)
+        gt_ranking = rankdata(gt_scores)
 
-            # Calculate ideal dcg:
-            top_t = np.argsort(relevance, axis=1)[:, ::-1][:, :]
-            toprel = relevance[np.arange(n_instances)[:, None], top_t]
-            idcg = np.sum(toprel / log_term, axis=-1, keepdims=True)
-
-            # Calculate actual dcg:
-            top_p = np.argsort(relevance_pred, axis=1)[:, ::-1][:, :]
-            pred_rel = relevance[np.arange(n_instances)[:, None], top_p]
-            pred_rel = np.sum(pred_rel / log_term, axis=-1, keepdims=True)
-            gain = pred_rel / idcg
-            return gain
-
-        x = rankdata(gt_runtimes)
-        y = rankdata(predicted_scores)
-
-        return ndcg(x, y)
+        predicted_scores_sum = np.sum((gt_scores - 1) / np.log2(1 + predicted_ranking))
+        return predicted_scores_sum / np.sum((gt_scores - 1) / np.log2(1 + gt_ranking))
 
     def get_name(self):
         return "NDCG"
@@ -53,7 +38,9 @@ class NDCG:
 
 class Performance_Regret:
     def evaluate(self, gt_runtimes: np.ndarray, predicted_scores: np.ndarray, feature_cost: float, algorithm_cutoff_time: int):
-        return np.min(predicted_scores) - np.min(gt_runtimes)
+        min_predicted_alg = np.argmin(predicted_scores)
+        min_predicted_alg_performance = gt_runtimes[min_predicted_alg]
+        return min_predicted_alg_performance - np.min(gt_runtimes)
 
     def get_name(self):
         return "performanceRegret"

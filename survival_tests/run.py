@@ -1,22 +1,24 @@
 import configparser
+import copy
 import logging
 import multiprocessing as mp
 import os
 
+#
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+#
+
+from sklearn.linear_model import Ridge
+
+import database_utils
+from approaches.combined_ranking_regression_trees.binary_decision_tree import BinaryDecisionTree
 from approaches.combined_ranking_regression_trees.borda_score import (borda_score_mean_performance, borda_score_mean_ranking,
                                                                       borda_score_median_ranking, geometric_mean_performance)
 from approaches.combined_ranking_regression_trees.evaulation_metrices import NDCG, KendallsTau_b, Performance_Regret
 from approaches.combined_ranking_regression_trees.ranking_loss import modified_position_error, spearman_footrule, spearman_rank_correlation
 from approaches.combined_ranking_regression_trees.regression_error_loss import regression_error_loss
 from approaches.combined_ranking_regression_trees.stopping_criteria import *
-
-os.environ["OPENBLAS_NUM_THREADS"] = "1"
-os.environ["MKL_NUM_THREADS"] = "1"
-
-from sklearn.linear_model import Ridge
-
-import database_utils
-from approaches.combined_ranking_regression_trees.binary_decision_tree import BinaryDecisionTree
 from approaches.oracle import Oracle
 from approaches.single_best_solver import SingleBestSolver
 from approaches.survival_forests.auto_surrogate import SurrogateAutoSurvivalForest
@@ -92,10 +94,37 @@ def create_approach(approach_names):
             approaches.append(SATzilla07())
         if approach_name == "isac":
             approaches.append(ISAC())
+        if approach_name == "baseline_decision_tree_position_error_borda_rank":
+            ranking_loss = copy.deepcopy(modified_position_error)
+            regression_loss = copy.deepcopy(regression_error_loss)
+            borda_score = borda_score_mean_ranking
+            for impact_factor in np.arange(0.9, 1.005, 0.005):
+                stopping_criterion = loss_under_threshold
+                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=7000)
+                approaches.append(binary_decision_tree)
+
+        if approach_name == "baseline_decision_tree_position_error":
+            ranking_loss = copy.deepcopy(modified_position_error)
+            regression_loss = copy.deepcopy(regression_error_loss)
+            borda_score = borda_score_mean_performance
+            for impact_factor in np.arange(0.9, 1.005, 0.005):
+                stopping_criterion = loss_under_threshold
+                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=7000)
+                approaches.append(binary_decision_tree)
+
+        if approach_name == "baseline_decision_tree":
+            ranking_loss = copy.deepcopy(spearman_rank_correlation)
+            regression_loss = copy.deepcopy(regression_error_loss)
+            borda_score = borda_score_mean_performance
+            for impact_factor in [0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1]:
+                stopping_criterion = loss_under_threshold
+                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=7000)
+                approaches.append(binary_decision_tree)  # ansatz threshikd runter setzen
+
         if approach_name == "binary_decision_tree_combined_loss":
             for ranking_loss in [spearman_rank_correlation, modified_position_error, spearman_rank_correlation, spearman_footrule][:1]:
                 for borda_score in [borda_score_mean_ranking, borda_score_median_ranking, borda_score_mean_performance, geometric_mean_performance][:1]:
-                    for stopping_criterion in [loss_under_threshold, same_ranking, same_ranking_percentage, max_depth]:
+                    for stopping_criterion in [loss_under_threshold, same_ranking, same_ranking_percentage_generator(), max_depth_generator()]:
                         for basic_impact_factor in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
                             regression_loss = regression_error_loss
                             binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, basic_impact_factor, stopping_criterion)
@@ -138,7 +167,7 @@ for fold in range(1, 11):
         for approach in approaches:
             metrics = list()
             metrics.append(Par10Metric())
-            # metrics.append(NDCG())
+            metrics.append(NDCG())
             metrics.append(KendallsTau_b())
             metrics.append(Performance_Regret())
             if approach.get_name() != "oracle":
