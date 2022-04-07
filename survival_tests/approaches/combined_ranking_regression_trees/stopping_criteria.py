@@ -1,4 +1,5 @@
 import math
+from tkinter.messagebox import NO
 
 import numpy as np
 from scipy.stats import rankdata
@@ -9,7 +10,9 @@ from approaches.combined_ranking_regression_trees.ranking_transformer import cal
 from approaches.combined_ranking_regression_trees.regression_error_loss import regression_error_loss
 
 
-def loss_under_threshold(performance_data: np.array, min_sample_split, impact_factor, depth=None, borda_score=borda_score_mean_performance, ranking_loss=spearman_rank_correlation, threshold=10000):
+def loss_under_threshold(
+    performance_data: np.array, min_sample_split, impact_factor, depth=None, borda_score=borda_score_mean_performance, ranking_loss=spearman_rank_correlation, threshold=100000, old_threshold=None
+):
     def _calc_loss():
         ranking_instances = calculate_ranking_from_performance_data(performance_data)
         ranking_error = ranking_loss(performance_data, borda_score, ranking_instances)
@@ -17,35 +20,38 @@ def loss_under_threshold(performance_data: np.array, min_sample_split, impact_fa
         return impact_factor * ranking_error + (1 - impact_factor) * regression_error
 
     if min_sample_split is not None and np.ma.size(performance_data, axis=0) < min_sample_split:
-        return True
+        return True, _calc_loss()
 
     elif np.ma.size(performance_data, axis=0) <= 1:
-        return True
+        return True, _calc_loss()
 
-    return _calc_loss() <= threshold
+    if old_threshold is not None and _calc_loss() >= old_threshold:
+        return False, _calc_loss()
+
+    return _calc_loss() <= threshold, _calc_loss()
 
 
-def same_ranking(performance_data: np.array, min_sample_split, impact_factor, depth=None, threshold=10000):
+def same_ranking(performance_data: np.array, min_sample_split, impact_factor, depth=None, threshold=None, old_threshold=None):
     if min_sample_split is not None and np.ma.size(performance_data, axis=0) < min_sample_split:
-        return True
+        return True, None
 
     elif np.ma.size(performance_data, axis=0) <= 1:
-        return True
+        return True, None
 
     rankings: np.array = calculate_ranking_from_performance_data(performance_data)
 
     for column in np.transpose(rankings):
         if not np.all(column == column[0]):
-            return False
-    return True
+            return False, None
+    return True, None
 
 
-def same_ranking_percentage(performance_data: np.array, min_sample_split, impact_factor, depth=None, percentage=0.75, threshold=10000):
+def same_ranking_percentage(performance_data: np.array, min_sample_split, impact_factor, depth=None, percentage=0.75, threshold=None, old_threshold=None):
     if min_sample_split is not None and np.ma.size(performance_data, axis=0) < min_sample_split:
-        return True
+        return True, None
 
     elif np.ma.size(performance_data, axis=0) <= 1:
-        return True
+        return True, None
 
     rankings: np.array = calculate_ranking_from_performance_data(performance_data)
 
@@ -57,15 +63,15 @@ def same_ranking_percentage(performance_data: np.array, min_sample_split, impact
             else:
                 same.append(0)
         if np.mean(same) >= percentage:
-            return True
+            return True, None
 
 
-def max_depth(performance_data: np.array, min_sample_split, impact_factor, depth=None, max_depth=6, threshold=10000):
+def max_depth(performance_data: np.array, min_sample_split, impact_factor, depth=None, threshold=65, old_threshold=None):
     if min_sample_split is not None and np.ma.size(performance_data, axis=0) < min_sample_split:
-        return True
+        return True, None
 
     elif np.ma.size(performance_data, axis=0) <= 1:
-        return True
+        return True, None
 
     else:
-        return depth < max_depth
+        return depth >= threshold, None

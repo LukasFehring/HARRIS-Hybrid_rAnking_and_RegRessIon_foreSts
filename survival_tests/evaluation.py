@@ -18,20 +18,37 @@ def publish_results_to_database(approach, db_config, scenario_name: str, fold: i
     db_cursor = db_handle.cursor()
     if "BinaryDecisionTree" in approach.get_name():
         approach: BinaryDecisionTree = approach
-        sql_statement = (
-            "INSERT INTO " + table_name + " (scenario_name, fold, approach, metric, impact_factor, ranking_error, borda_score, stopping_criteria, result) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
-        )
-        values = (
-            scenario_name,
-            fold,
-            approach.get_name(),
-            metric_name,
-            approach.impact_factor,
-            approach.ranking_loss.__name__,
-            approach.borda_score.__name__,
-            approach.stopping_criterion.__name__,
-            str(result),
-        )
+        if not np.isnan(result):
+            sql_statement = (
+                "INSERT INTO "
+                + table_name
+                + " (scenario_name, fold, approach, metric, impact_factor, ranking_error, borda_score, stopping_criteria, result) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            )
+            values = (
+                scenario_name,
+                str(fold),
+                approach.get_name(),
+                metric_name,
+                str(approach.impact_factor),
+                approach.ranking_loss.__name__,
+                approach.borda_score.__name__,
+                f"{approach.stopping_criterion.__name__}_{str(approach.stopping_threshold)}",
+                str(result),
+            )
+        else:
+            sql_statement = (
+                "INSERT INTO " + table_name + " (scenario_name, fold, approach, metric, impact_factor, ranking_error, borda_score, stopping_criteria) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+            )
+            values = (
+                scenario_name,
+                str(fold),
+                approach.get_name(),
+                metric_name,
+                str(approach.impact_factor),
+                approach.ranking_loss.__name__,
+                approach.borda_score.__name__,
+                f"{approach.stopping_criterion.__name__}_{str(approach.stopping_threshold)}",
+            )
     else:
         sql_statement = "INSERT INTO " + table_name + " (scenario_name, fold, approach, metric, result) VALUES (%s, %s, %s, %s, %s)"
         values = (scenario_name, fold, approach_name, metric_name, str(result))

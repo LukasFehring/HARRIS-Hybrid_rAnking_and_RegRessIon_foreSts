@@ -18,7 +18,7 @@ from aslib_scenario import ASlibScenario
 
 
 class BinaryDecisionTree:
-    def __init__(self, ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, min_sample_leave=3, min_sample_split=7, stopping_threshold = None):
+    def __init__(self, ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, min_sample_leave=3, min_sample_split=7, stopping_threshold=None, old_threshold=None):
         self.left = None
         self.right = None
         self.splitting_feature = None
@@ -32,6 +32,7 @@ class BinaryDecisionTree:
         self.min_sample_split = min_sample_split
         self.impact_factor = impact_factor
         self.stopping_threshold = stopping_threshold
+        self.old_threshold = old_threshold
 
         # functions used in training
         self.ranking_loss = ranking_loss
@@ -148,7 +149,10 @@ class BinaryDecisionTree:
         self.feature_number_map = {i: name for i, name in enumerate(train_scenario.features)}
 
         rankings = calculate_ranking_from_performance_data(performance_data)
-        if self.stopping_criterion(performance_data, self.min_sample_split, self.impact_factor, depth=depth, threshold=self.stopping_threshold):
+        stop, self.old_threshold = self.stopping_criterion(
+            performance_data, self.min_sample_split, self.impact_factor, depth=depth, threshold=self.stopping_threshold, old_threshold=self.old_threshold
+        )
+        if stop:
             self.label = np.average(performance_data, axis=0)
         else:
             best_known_split_loss = math.inf
@@ -176,9 +180,12 @@ class BinaryDecisionTree:
             bigger_scenario = deepcopy(train_scenario)
             bigger_scenario.feature_data = train_scenario.feature_data[bigger_instances]
             bigger_scenario.performance_data = train_scenario.performance_data[bigger_instances]
-
-            self.left = BinaryDecisionTree(self.ranking_loss, self.regression_loss, self.borda_score, self.impact_factor, self.stopping_criterion)
-            self.right = BinaryDecisionTree(self.ranking_loss, self.regression_loss, self.borda_score, self.impact_factor, self.stopping_criterion)
+            self.left = BinaryDecisionTree(
+                self.ranking_loss, self.regression_loss, self.borda_score, self.impact_factor, self.stopping_criterion, stopping_threshold=self.stopping_threshold, old_threshold=self.old_threshold
+            )
+            self.right = BinaryDecisionTree(
+                self.ranking_loss, self.regression_loss, self.borda_score, self.impact_factor, self.stopping_criterion, stopping_threshold=self.stopping_threshold, old_threshold=self.old_threshold
+            )
 
             self.left.fit(smaller_scenario, self.fold, amount_of_training_instances, depth=depth + 1)
 

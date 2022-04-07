@@ -94,41 +94,86 @@ def create_approach(approach_names):
             approaches.append(SATzilla07())
         if approach_name == "isac":
             approaches.append(ISAC())
+
+        if approach_name == "bt_stop_max_depth":
+            ranking_loss = copy.deepcopy(spearman_rank_correlation)
+            regression_loss = copy.deepcopy(regression_error_loss)
+            borda_score = borda_score_mean_ranking
+            for impact_factor in np.arange(0.0, 1.005, 0.005):
+                for stopping_threshold in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11):
+                    stopping_criterion = max_depth
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    approaches.append(binary_decision_tree)
+
+        if approach_name == "bt_stop_same_ranking_percentage":
+            ranking_loss = copy.deepcopy(spearman_rank_correlation)
+            regression_loss = copy.deepcopy(regression_error_loss)
+            borda_score = borda_score_mean_ranking
+            for impact_factor in np.arange(0.9, 1.005, 0.005):
+                for stopping_threshold in (100000, 150000, 200000, 250000, 300000, 350000):
+                    stopping_criterion = same_ranking_percentage
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    approaches.append(binary_decision_tree)
+
+        if approach_name == "bt_stop_same_ranking":
+            ranking_loss = copy.deepcopy(spearman_rank_correlation)
+            regression_loss = copy.deepcopy(regression_error_loss)
+            borda_score = borda_score_mean_ranking
+            for impact_factor in np.arange(0.9, 1.005, 0.005):
+                for stopping_threshold in (100000, 150000, 200000, 250000, 300000, 350000):
+                    stopping_criterion = same_ranking
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    approaches.append(binary_decision_tree)
+
+        if approach_name == "bt_spearman_rank_correlation":
+            ranking_loss = copy.deepcopy(spearman_rank_correlation)
+            regression_loss = copy.deepcopy(regression_error_loss)
+            borda_score = borda_score_mean_ranking
+            for impact_factor in np.arange(0.9, 1.005, 0.005):
+                for stopping_threshold in (100000, 150000, 200000, 250000, 300000, 350000):
+                    stopping_criterion = loss_under_threshold
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    approaches.append(binary_decision_tree)
+
+        if approach_name == "bt_spearman_footrule":
+            ranking_loss = copy.deepcopy(spearman_footrule)
+            regression_loss = copy.deepcopy(regression_error_loss)
+            borda_score = borda_score_mean_ranking
+            for impact_factor in np.arange(0.9, 1.005, 0.005):
+                for stopping_threshold in (100000, 150000, 200000, 250000, 300000, 350000):
+                    stopping_criterion = loss_under_threshold
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    approaches.append(binary_decision_tree)
+
         if approach_name == "baseline_decision_tree_position_error_borda_rank":
             ranking_loss = copy.deepcopy(modified_position_error)
             regression_loss = copy.deepcopy(regression_error_loss)
             borda_score = borda_score_mean_ranking
             for impact_factor in np.arange(0.9, 1.005, 0.005):
-                stopping_criterion = loss_under_threshold
-                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=7000)
-                approaches.append(binary_decision_tree)
+                for stopping_threshold in (100000, 150000, 200000, 250000, 300000, 350000):
+                    stopping_criterion = loss_under_threshold
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    approaches.append(binary_decision_tree)
 
         if approach_name == "baseline_decision_tree_position_error":
             ranking_loss = copy.deepcopy(modified_position_error)
             regression_loss = copy.deepcopy(regression_error_loss)
             borda_score = borda_score_mean_performance
             for impact_factor in np.arange(0.9, 1.005, 0.005):
-                stopping_criterion = loss_under_threshold
-                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=7000)
-                approaches.append(binary_decision_tree)
+                for stopping_threshold in (100000, 150000, 200000, 250000, 300000, 350000):
+                    stopping_criterion = loss_under_threshold
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    approaches.append(binary_decision_tree)
 
         if approach_name == "baseline_decision_tree":
             ranking_loss = copy.deepcopy(spearman_rank_correlation)
             regression_loss = copy.deepcopy(regression_error_loss)
             borda_score = borda_score_mean_performance
             for impact_factor in [0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1]:
-                stopping_criterion = loss_under_threshold
-                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=7000)
-                approaches.append(binary_decision_tree)  # ansatz threshikd runter setzen
-
-        if approach_name == "binary_decision_tree_combined_loss":
-            for ranking_loss in [spearman_rank_correlation, modified_position_error, spearman_rank_correlation, spearman_footrule][:1]:
-                for borda_score in [borda_score_mean_ranking, borda_score_median_ranking, borda_score_mean_performance, geometric_mean_performance][:1]:
-                    for stopping_criterion in [loss_under_threshold, same_ranking, same_ranking_percentage_generator(), max_depth_generator()]:
-                        for basic_impact_factor in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
-                            regression_loss = regression_error_loss
-                            binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, basic_impact_factor, stopping_criterion)
-                            approaches.append(binary_decision_tree)
+                for stopping_threshold in (100000, 150000, 200000, 250000):
+                    stopping_criterion = loss_under_threshold
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    approaches.append(binary_decision_tree)  # ansatz threshikd runter setzen
 
     return approaches
 
