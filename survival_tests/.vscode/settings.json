@@ -17,6 +17,9 @@
     "terminal.integrated.env.linux": {
         "PYTHONPATH": "${workspaceFolder}"
     },
+    "terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}"
+    },
     "python.linting.pycodestyleEnabled": true,
     "python.testing.unittestArgs": [
         "-v",
