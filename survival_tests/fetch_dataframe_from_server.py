@@ -10,6 +10,7 @@ def load_configuration():
     config.read_file(open("conf/experiment_configuration.cfg"))
     return config
 
+
 def fetch_dataframe_from_server(sql_statement):
     db_config = load_configuration()
     db_handle, table_name = database_utils.initialize_mysql_db_and_table_name_from_config(db_config)
