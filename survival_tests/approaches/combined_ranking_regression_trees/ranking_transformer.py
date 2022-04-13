@@ -5,7 +5,7 @@ from scipy.stats import rankdata
 from approaches.combined_ranking_regression_trees.util import calculate_ranking_with_ties
 
 
-def calculate_ranking_from_performance_data(performance_data: np.array):  # todo modify this to be a np array
+def calculate_ranking_from_performance_data(performance_data: np.array): 
     ranked_instances = list()
     for instance in performance_data:
         ranked_instances.append(calculate_ranking_with_ties(instance))

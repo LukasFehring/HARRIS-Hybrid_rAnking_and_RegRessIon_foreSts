@@ -58,7 +58,7 @@ def same_ranking_percentage(performance_data: np.array, min_sample_split, impact
     for i in range(math.ceil((1 - percentage) * len(performance_data))):
         same = list()
         for column in np.transpose(rankings):
-            if np.all(column == column[0]):  # todo error this needs to be the most popular ranking
+            if np.all(column == column[0]): 
                 same.append(1)
             else:
                 same.append(0)
