@@ -97,7 +97,7 @@ def create_approach(approach_names):
         if approach_name == "evluate_different_ranking_lossos":
             for ranking_loss in [modified_position_error, spearman_footrule, spearman_rank_correlation, squared_hinge_loss]:
                 regression_loss = copy.deepcopy(regression_error_loss)
-                borda_score = borda_score_mean_ranking
+                borda_score = copy.deepcopy(borda_score_mean_ranking)
                 for impact_factor in [0, 0.2, 0.4, 0.6, 0.8, 1]:
                     for stopping_threshold in (2, 3, 4, 5):
                         stopping_criterion = max_depth
@@ -109,17 +109,18 @@ def create_approach(approach_names):
                 if stopping_criterion == max_depth:
                     for stopping_threshold in (2, 3, 4, 5):
                         for impact_factor in [0.2, 0.4, 0.6, 0.8]:
-                            for ranking_loss in [modified_position_error, spearman_footrule, spearman_rank_correlation, squared_hinge_loss]:
-                                regression_loss = copy.deepcopy(regression_error_loss)
-                                borda_score = borda_score_mean_ranking
-                                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                            ranking_loss = spearman_footrule
+                            regression_loss = copy.deepcopy(regression_error_loss)
+                            borda_score = borda_score_mean_ranking
+                            binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                else:
                     for stopping_threshold in (10000, 40000, 70000, 100000, 150000, 200000, 250000, 300000, 350000):
                         for impact_factor in [0.2, 0.4, 0.6, 0.8]:
-                            for ranking_loss in [modified_position_error, spearman_footrule, spearman_rank_correlation, squared_hinge_loss]:
-                                regression_loss = copy.deepcopy(regression_error_loss)
-                                borda_score = borda_score_mean_ranking
-                                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
-                                approaches.append(binary_decision_tree)
+                            ranking_loss = spearman_footrule
+                            regression_loss = copy.deepcopy(regression_error_loss)
+                            borda_score = borda_score_mean_ranking
+                            binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                            approaches.append(binary_decision_tree)
 
         if approach_name == "evaluate_different_borda_scores":
             for borda_score in [borda_score_mean_ranking, borda_score_median_ranking, borda_score_mean_performance, geometric_mean_performance]:
@@ -132,15 +133,25 @@ def create_approach(approach_names):
                             binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
                             approaches.append(binary_decision_tree)
 
-        if approach_name == "bt_stop_max_depth":
-            ranking_loss = copy.deepcopy(spearman_rank_correlation)
+        if approach_name == "lambda_ablaton_study_max_depth_3_spearman_fottrule":
+            ranking_loss = copy.deepcopy(spearman_footrule)
             regression_loss = copy.deepcopy(regression_error_loss)
             borda_score = borda_score_mean_ranking
-            for impact_factor in np.arange(0.0, 1.005, 0.05):
-                for stopping_threshold in (3, 4, 5, 6, 7):
-                    stopping_criterion = max_depth
-                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
-                    approaches.append(binary_decision_tree)
+            for impact_factor in np.arange(0.0, 1.05, 0.05):
+                stopping_threshold = 3
+                stopping_criterion = max_depth
+                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                approaches.append(binary_decision_tree)
+
+        if approach_name == "lambda_ablaton_study_max_depth_3_position_error":
+            ranking_loss = copy.deepcopy(modified_position_error)
+            regression_loss = copy.deepcopy(regression_error_loss)
+            borda_score = borda_score_mean_ranking
+            for impact_factor in np.arange(0.0, 1.05, 0.05):
+                stopping_threshold = 3
+                stopping_criterion = max_depth
+                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                approaches.append(binary_decision_tree)
 
         if approach_name == "bt_stop_same_ranking_percentage":
             ranking_loss = copy.deepcopy(spearman_rank_correlation)
@@ -223,7 +234,7 @@ initialize_logging()
 config = load_configuration()
 logger.info("Running experiments with config:")
 print_config(config)
-debug_mode = False
+debug_mode = True
 # fold = int(sys.argv[1])
 # logger.info("Running experiments for fold " + str(fold))
 
@@ -240,8 +251,8 @@ amount_of_scenario_training_instances = int(config["EXPERIMENTS"]["amount_of_tra
 tune_hyperparameters = bool(int(config["EXPERIMENTS"]["tune_hyperparameters"]))
 
 
-for fold in range(1, 11):
-    for scenario in scenarios:
+for scenario in scenarios:
+    for fold in range(1, 11):
 
         approaches = create_approach(approach_names)
 
