@@ -234,7 +234,7 @@ initialize_logging()
 config = load_configuration()
 logger.info("Running experiments with config:")
 print_config(config)
-debug_mode = True
+debug_mode = False
 # fold = int(sys.argv[1])
 # logger.info("Running experiments for fold " + str(fold))
 
