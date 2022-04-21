@@ -109,18 +109,19 @@ def create_approach(approach_names):
                 if stopping_criterion == max_depth:
                     for stopping_threshold in (2, 3, 4, 5):
                         for impact_factor in [0.2, 0.4, 0.6, 0.8]:
-                            ranking_loss = spearman_footrule
-                            regression_loss = copy.deepcopy(regression_error_loss)
-                            borda_score = borda_score_mean_ranking
-                            binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
-                else:
-                    for stopping_threshold in (10000, 40000, 70000, 100000, 150000, 200000, 250000, 300000, 350000):
-                        for impact_factor in [0.2, 0.4, 0.6, 0.8]:
-                            ranking_loss = spearman_footrule
+                            ranking_loss = modified_position_error
                             regression_loss = copy.deepcopy(regression_error_loss)
                             borda_score = borda_score_mean_ranking
                             binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
                             approaches.append(binary_decision_tree)
+                # else:
+                #    for stopping_threshold in (10000, 40000, 70000, 100000, 150000, 200000, 250000, 300000, 350000):
+                #        for impact_factor in [0.2, 0.4, 0.6, 0.8]:
+                #            ranking_loss = spearman_footrule
+                #            regression_loss = copy.deepcopy(regression_error_loss)
+                #            borda_score = borda_score_mean_ranking
+                #            binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                #            approaches.append(binary_decision_tree)
 
         if approach_name == "evaluate_different_borda_scores":
             for borda_score in [borda_score_mean_ranking, borda_score_median_ranking, borda_score_mean_performance, geometric_mean_performance]:
@@ -266,7 +267,7 @@ for scenario in scenarios:
             metrics.append(Performance_Regret())
             if approach.get_name() != "oracle":
                 metrics.append(NumberUnsolvedInstances(False))
-                metrics.append(NumberUnsolvedInstances(True))
+                #metrics.append(NumberUnsolvedInstances(True))
 
             if debug_mode:
                 evaluate_scenario(scenario, approach, metrics, amount_of_scenario_training_instances, fold, config, tune_hyperparameters)
