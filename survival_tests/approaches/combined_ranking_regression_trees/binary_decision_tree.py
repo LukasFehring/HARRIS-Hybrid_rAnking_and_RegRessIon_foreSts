@@ -98,10 +98,10 @@ class BinaryDecisionTree:
             self.imputer = SimpleImputer()
             transformed_features = self.imputer.fit_transform(train_scenario.feature_data.values)
 
-            self.scaler = preprocessing.StandardScaler()
+            self.scaler = preprocessing.MinMaxScaler()
             transformed_features = self.scaler.fit_transform(transformed_features)
 
-            performance_data = preprocessing.StandardScaler().fit_transform(train_scenario.performance_data.values)
+            performance_data = preprocessing.MinMaxScaler().fit_transform(train_scenario.performance_data.values)
             return pd.DataFrame(transformed_features), pd.DataFrame(performance_data)
 
         def split_by_feature_value(feature_data, splitting_point):
@@ -146,8 +146,7 @@ class BinaryDecisionTree:
 
         if depth == 0:
             train_scenario.feature_data, train_scenario.performance_data = scenario_preporcessing()
-            
-            
+
         feature_data = train_scenario.feature_data.values
         performance_data = train_scenario.performance_data.values
 
@@ -156,11 +155,17 @@ class BinaryDecisionTree:
         self.feature_number_map = {i: name for i, name in enumerate(train_scenario.features)}
 
         rankings = calculate_ranking_from_performance_data(performance_data)
-        print(type(rankings))
-        print(f"amount of rankings is {len(rankings) / len(performance_data)} of the length of instances")
-
+        # print(type(rankings))
+        # print(f"amount of rankings is {len(rankings) / len(performance_data)} of the length of instances")
         stop, self.old_threshold = self.stopping_criterion(
-            performance_data, self.min_sample_split, self.impact_factor, depth=depth, threshold=self.stopping_threshold, old_threshold=self.old_threshold
+            performance_data,
+            self.min_sample_split,
+            self.impact_factor,
+            depth=depth,
+            borda_score=self.borda_score,
+            ranking_loss=self.ranking_loss,
+            threshold=self.stopping_threshold,
+            old_threshold=self.old_threshold,
         )
         if stop:
             self.label = np.average(performance_data, axis=0)
@@ -190,12 +195,12 @@ class BinaryDecisionTree:
             smaller_performance_instances = performance_data[smaller_instances]
             smaller_ranking_instances = rankings[smaller_instances]
 
-            print(f"amount of smaller rankings is {len(smaller_ranking_instances)/len(performance_data)} of the length of instances")
+            # print(f"amount of smaller rankings is {len(smaller_ranking_instances)/len(performance_data)} of the length of instances")
 
             bigger_performance_instances = performance_data[bigger_instances]
             bigger_ranking_instances = rankings[bigger_instances]
 
-            print(f"amount of bigger rankings is {len(bigger_ranking_instances)/len(performance_data)} of the length of instances")
+            # print(f"amount of bigger rankings is {len(bigger_ranking_instances)/len(performance_data)} of the length of instances")
 
             # calculate smalelr and bigger loss
             regression_loss = regression_error_loss(smaller_performance_instances) * len(smaller_performance_instances) / len(performance_data) + regression_error_loss(
