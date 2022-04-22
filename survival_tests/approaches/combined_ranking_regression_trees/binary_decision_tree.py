@@ -98,8 +98,8 @@ class BinaryDecisionTree:
             self.imputer = SimpleImputer()
             transformed_features = self.imputer.fit_transform(train_scenario.feature_data.values)
 
-            self.scaler = preprocessing.MinMaxScaler()
-            transformed_features = self.scaler.fit_transform(transformed_features)
+            # self.scaler = preprocessing.MinMaxScaler()
+            # transformed_features = self.scaler.fit_transform(transformed_features)
 
             performance_data = preprocessing.MinMaxScaler().fit_transform(train_scenario.performance_data.values)
             return pd.DataFrame(transformed_features), pd.DataFrame(performance_data)
