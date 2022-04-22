@@ -16,12 +16,12 @@ def modified_position_error(performance_data, borda_score, rankings):
 
 def spearman_rank_correlation(performance_data, borda_score, rankings):
     consensus_ranking = borda_score(rankings, performance_data)
-    return np.sum((rankings - consensus_ranking) ** 2) / len(rankings)  # /len(rankings) ** 2
+    return np.sum((rankings - consensus_ranking) ** 2) / len(rankings) / len(rankings) ** 2
 
 
 def spearman_footrule(performance_data, borda_scroe, rankings):
     consensuns_ranking = borda_scroe(rankings, performance_data)
-    return np.sum(abs(rankings - consensuns_ranking)) / len(rankings)  # / len(rankings) ** 2
+    return np.sum(abs(rankings - consensuns_ranking)) / len(rankings) / len(rankings)
 
 
 def number_of_discordant_pairs(performance_data, borda_score, rankings):

@@ -15,7 +15,7 @@ import database_utils
 from approaches.combined_ranking_regression_trees.binary_decision_tree import BinaryDecisionTree
 from approaches.combined_ranking_regression_trees.borda_score import borda_score_mean_performance, borda_score_mean_ranking, borda_score_median_ranking, geometric_mean_performance
 from approaches.combined_ranking_regression_trees.evaulation_metrices import NDCG, KendallsTau_b, Performance_Regret
-from approaches.combined_ranking_regression_trees.ranking_loss import modified_position_error, spearman_footrule, spearman_rank_correlation, squared_hinge_loss
+from approaches.combined_ranking_regression_trees.ranking_loss import modified_position_error, number_of_discordant_pairs, spearman_footrule, spearman_rank_correlation, squared_hinge_loss
 from approaches.combined_ranking_regression_trees.regression_error_loss import regression_error_loss
 from approaches.combined_ranking_regression_trees.stopping_criteria import *
 from approaches.oracle import Oracle
@@ -143,6 +143,16 @@ def create_approach(approach_names):
                 binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
                 approaches.append(binary_decision_tree)
 
+        if approach_name == "ablation_study_lambda_and_ranking":
+            for ranking_loss in (modified_position_error, spearman_footrule, spearman_rank_correlation, squared_hinge_loss, number_of_discordant_pairs):
+                for impact_factor in np.arange(0.0, 1.05, 0.1):
+                    borda_score = borda_score_mean_ranking
+                    regression_loss = copy.deepcopy(regression_error_loss)
+                    stopping_threshold = 3
+                    stopping_criterion = max_depth
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    approaches.append(binary_decision_tree)
+
     return approaches
 
 
@@ -171,9 +181,9 @@ amount_of_scenario_training_instances = int(config["EXPERIMENTS"]["amount_of_tra
 tune_hyperparameters = bool(int(config["EXPERIMENTS"]["tune_hyperparameters"]))
 
 
-for scenario in scenarios:
-    for fold in range(1, 11):
+for fold in range(1, 11):
 
+    for scenario in scenarios:
         approaches = create_approach(approach_names)
 
         if len(approaches) < 1:
