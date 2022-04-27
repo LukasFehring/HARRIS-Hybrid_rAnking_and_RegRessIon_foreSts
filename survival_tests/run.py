@@ -144,7 +144,7 @@ def create_approach(approach_names):
                 approaches.append(binary_decision_tree)
 
         if approach_name == "ablation_study_lambda_and_ranking":
-            for ranking_loss in (modified_position_error, spearman_footrule, spearman_rank_correlation, squared_hinge_loss, number_of_discordant_pairs):
+            for ranking_loss in (modified_position_error, spearman_footrule, spearman_rank_correlation, number_of_discordant_pairs, squared_hinge_loss):
                 for impact_factor in np.arange(0.0, 1.05, 0.1):
                     borda_score = borda_score_mean_ranking
                     regression_loss = copy.deepcopy(regression_error_loss)
@@ -181,9 +181,8 @@ amount_of_scenario_training_instances = int(config["EXPERIMENTS"]["amount_of_tra
 tune_hyperparameters = bool(int(config["EXPERIMENTS"]["tune_hyperparameters"]))
 
 
-for fold in range(1, 11):
-
-    for scenario in scenarios:
+for scenario in scenarios:
+    for fold in range(1, 11):
         approaches = create_approach(approach_names)
 
         if len(approaches) < 1:
