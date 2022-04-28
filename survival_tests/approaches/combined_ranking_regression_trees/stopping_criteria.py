@@ -4,14 +4,14 @@ from tkinter.messagebox import NO
 import numpy as np
 from scipy.stats import rankdata
 
-from approaches.combined_ranking_regression_trees.borda_score import borda_score_mean_performance
+from approaches.combined_ranking_regression_trees.borda_score import borda_score_mean_performance, borda_score_mean_ranking
 from approaches.combined_ranking_regression_trees.ranking_loss import spearman_rank_correlation
 from approaches.combined_ranking_regression_trees.ranking_transformer import calculate_ranking_from_performance_data
 from approaches.combined_ranking_regression_trees.regression_error_loss import regression_error_loss
 
 
 def loss_under_threshold(
-    performance_data: np.array, min_sample_split, impact_factor, depth=None, borda_score=borda_score_mean_performance, ranking_loss=spearman_rank_correlation, threshold=100000, old_threshold=None
+    performance_data: np.array, min_sample_split, impact_factor, depth=None, borda_score=borda_score_mean_ranking, ranking_loss=spearman_rank_correlation, threshold=100000, old_threshold=None
 ):
     def _calc_loss():
         ranking_instances = calculate_ranking_from_performance_data(performance_data)
@@ -46,7 +46,7 @@ def same_ranking(performance_data: np.array, min_sample_split, impact_factor, de
     return True, None
 
 
-def same_ranking_percentage(performance_data: np.array, min_sample_split, impact_factor, depth=None, percentage=0.75, threshold=None, old_threshold=None, borda_score=None, ranking_loss=None):
+def same_ranking_percentage(performance_data: np.array, min_sample_split, impact_factor, depth=None, threshold=0.75, old_threshold=None, borda_score=None, ranking_loss=None):
     if min_sample_split is not None and np.ma.size(performance_data, axis=0) < min_sample_split:
         return True, None
 
@@ -55,14 +55,14 @@ def same_ranking_percentage(performance_data: np.array, min_sample_split, impact
 
     rankings: np.array = calculate_ranking_from_performance_data(performance_data)
 
-    for i in range(math.ceil((1 - percentage) * len(performance_data))):
+    for i in range(math.ceil((1 - threshold) * len(performance_data))):
         same = list()
         for column in np.transpose(rankings):
             if np.all(column == column[0]):
                 same.append(1)
             else:
                 same.append(0)
-        if np.mean(same) >= percentage:
+        if np.mean(same) >= threshold:
             return True, None
 
 
