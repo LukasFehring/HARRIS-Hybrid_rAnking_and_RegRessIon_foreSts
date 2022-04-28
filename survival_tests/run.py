@@ -119,6 +119,7 @@ def create_approach(approach_names):
                     for stopping_threshold in np.arange(0,1.1,0,1):
                         binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
                         approaches.append(binary_decision_tree)
+       
         if approach_name == "ablation_study_lambda":
             for impact_factor in np.arange(0.0, 1.05, 0.05):
                 ranking_loss = copy.deepcopy(spearman_footrule)
@@ -131,7 +132,7 @@ def create_approach(approach_names):
 
         if approach_name == "ablation_study_borda_score":
             for borda_score in (borda_score_mean_performance, borda_score_mean_ranking, borda_score_median_ranking, geometric_mean_performance):
-                impact_factor = 0.15
+                impact_factor = 0.6
                 ranking_loss = copy.deepcopy(spearman_footrule)
                 regression_loss = copy.deepcopy(regression_error_loss)
                 stopping_threshold = 3
@@ -145,7 +146,7 @@ def create_approach(approach_names):
                 regression_loss = copy.deepcopy(regression_error_loss)
                 stopping_threshold = 3
                 stopping_criterion = max_depth
-                impact_factor = 0.15
+                impact_factor = 0.6
                 binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
                 approaches.append(binary_decision_tree)
 
