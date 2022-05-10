@@ -19,6 +19,11 @@ def spearman_rank_correlation(performance_data, borda_score, rankings):
     return np.sum((rankings - consensus_ranking) ** 2) / len(rankings) / (len(rankings) - 1) ** 2
 
 
+def spearman_rankk_correlation_no_normalisation(performance_data, borda_score, rankings):
+    consensus_ranking = borda_score(rankings, performance_data)
+    return np.sum((rankings - consensus_ranking) ** 2) / len(rankings)
+
+
 def spearman_footrule(performance_data, borda_scroe, rankings):
     consensuns_ranking = borda_scroe(rankings, performance_data)
     return np.sum(abs(rankings - consensuns_ranking)) / len(rankings) / len(rankings) - 1
@@ -27,8 +32,8 @@ def spearman_footrule(performance_data, borda_scroe, rankings):
 def number_of_discordant_pairs(performance_data, borda_score, rankings):
     consensus_ranking = borda_score(rankings, performance_data)
     discordant_pairs = 0
-    maximal_discordant_pairs = 0 
-    for ranking in rankings: 
+    maximal_discordant_pairs = 0
+    for ranking in rankings:
         for first_pair in range(len(consensus_ranking)):
             for second_pair in range(first_pair + 1, len(consensus_ranking)):
                 if (

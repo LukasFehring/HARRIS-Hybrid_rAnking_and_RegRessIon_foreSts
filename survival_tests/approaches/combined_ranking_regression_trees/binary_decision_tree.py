@@ -93,7 +93,7 @@ class BinaryDecisionTree:
     def get_name(self):
         return "BinaryDecisionTree"
 
-    def fit(self, train_scenario: ASlibScenario, fold, amount_of_training_instances, depth=0):
+    def fit(self, train_scenario: ASlibScenario, fold, amount_of_training_instances, depth=0, do_preprocessing=True):
         def scenario_preporcessing():
             self.imputer = SimpleImputer()
             transformed_features = self.imputer.fit_transform(train_scenario.feature_data.values)
@@ -144,7 +144,7 @@ class BinaryDecisionTree:
             loss = calculate_loss(performance_data, smaller_performance_instances, bigger_performance_instances, smaller_ranking_instances, bigger_ranking_instances)
             return loss
 
-        if depth == 0:
+        if depth == 0 and do_preprocessing:
             train_scenario.feature_data, train_scenario.performance_data = scenario_preporcessing()
 
         feature_data = train_scenario.feature_data.values
