@@ -12,9 +12,11 @@ class KendallsTau_b:
         gr_runtiems = ground truth runtimes, daher die aus dem test
         predicted scores ist meine ausgabe des algos. also beispielsweise laufzueit oder score
         feature cost ist die summe der zeit der feature berechnung - daher wird sie im part10 dazu addiert - in anderen muss man es sich im detail anschauen"""
-        x = rankdata(gt_runtimes)
-        y = rankdata(predicted_scores)
+        x = rankdata(gt_runtimes, method = 'min')
+        y = rankdata(predicted_scores, method = 'min')
 
+        if np.isnan(kendalltau(x, y).correlation):
+            print()
         return kendalltau(x, y).correlation
 
     def get_name(self):
