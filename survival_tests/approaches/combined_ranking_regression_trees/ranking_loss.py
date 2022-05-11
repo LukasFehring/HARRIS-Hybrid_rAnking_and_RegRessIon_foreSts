@@ -29,6 +29,11 @@ def spearman_footrule(performance_data, borda_scroe, rankings):
     return np.sum(abs(rankings - consensuns_ranking)) / len(rankings) / len(rankings) - 1
 
 
+def corrected_spearman_footrule(performance_data, borda_scroe, rankings):
+    consensuns_ranking = borda_scroe(rankings, performance_data)
+    return np.sum(abs(rankings - consensuns_ranking)) / len(rankings) / (len(rankings) - 1)
+
+
 def number_of_discordant_pairs(performance_data, borda_score, rankings):
     consensus_ranking = borda_score(rankings, performance_data)
     discordant_pairs = 0
