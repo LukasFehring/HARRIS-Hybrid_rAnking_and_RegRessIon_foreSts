@@ -54,14 +54,10 @@ def same_ranking_percentage(performance_data: np.array, min_sample_split, impact
         return True, None
 
     rankings: np.array = calculate_ranking_from_performance_data(performance_data)
-
-    not_enough_duplicates = 0
     for column in rankings:
         same_ranking_overview = np.all(column == rankings, axis=1)
         if np.sum(same_ranking_overview) / len(rankings) >= threshold:
             return True, None
-
-        not_enough_duplicates += 1
     return False, None
 
 
