@@ -55,15 +55,14 @@ def same_ranking_percentage(performance_data: np.array, min_sample_split, impact
 
     rankings: np.array = calculate_ranking_from_performance_data(performance_data)
 
-    for i in range(math.ceil((1 - threshold) * len(performance_data))):
-        same = list()
-        for column in np.transpose(rankings):
-            if np.all(column == column[0]):
-                same.append(1)
-            else:
-                same.append(0)
-        if np.mean(same) >= threshold:
+    not_enough_duplicates = 0
+    for column in rankings:
+        same_ranking_overview = np.all(column == rankings, axis=1)
+        if np.sum(same_ranking_overview) / len(rankings) >= threshold:
             return True, None
+
+        not_enough_duplicates += 1
+    return False, None
 
 
 def max_depth(performance_data: np.array, min_sample_split, impact_factor, depth=None, threshold=65, old_threshold=None, borda_score=None, ranking_loss=None):
