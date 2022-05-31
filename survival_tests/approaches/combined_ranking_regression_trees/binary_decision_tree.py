@@ -22,7 +22,7 @@ from aslib_scenario import ASlibScenario
 
 class BinaryDecisionTree:
     def __init__(
-        self, ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, min_sample_leave=3, min_sample_split=7, stopping_threshold=None, old_threshold=None, loss_overview=list()
+        self, ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, min_sample_leave=3, min_sample_split=7, stopping_threshold=None, old_threshold=None, loss_overview=list(), mu = 10
     ):
         self.left = None
         self.right = None
@@ -45,6 +45,7 @@ class BinaryDecisionTree:
         self.regression_loss = regression_loss
         self.borda_score = borda_score
         self.stopping_criterion = stopping_criterion
+        self.mu = mu
 
     def get_candidate_splitting_points(self, feature_data: np.array):
         def filter_feature_data(feature_data):
@@ -97,7 +98,8 @@ class BinaryDecisionTree:
         def scenario_preporcessing():
             self.imputer = SimpleImputer()
             transformed_features = self.imputer.fit_transform(train_scenario.feature_data.values)
-
+            threshold = train_scenario.algorithm_cutoff_time
+            #train_scenario.performance_data = train_scenario.performance_data.replace(10 * threshold, self.mu * threshold) #todo if preprocessing wanted dont make this a comment
             # self.scaler = preprocessing.MinMaxScaler()
             # transformed_features = self.scaler.fit_transform(transformed_features)
 
