@@ -198,7 +198,7 @@ for scenario in scenarios:
             metrics = list()
             metrics.append(Par10Metric())
             metrics.append(NDCG())
-            metrics.append(KendallsTau_b())
+            #metrics.append(KendallsTau_b())
             metrics.append(Performance_Regret())
             if approach.get_name() != "oracle":
                 metrics.append(NumberUnsolvedInstances(False))
