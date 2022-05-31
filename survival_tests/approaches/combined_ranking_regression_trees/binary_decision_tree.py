@@ -99,7 +99,7 @@ class BinaryDecisionTree:
             self.imputer = SimpleImputer()
             transformed_features = self.imputer.fit_transform(train_scenario.feature_data.values)
             threshold = train_scenario.algorithm_cutoff_time
-            #train_scenario.performance_data = train_scenario.performance_data.replace(10 * threshold, self.mu * threshold)
+            #train_scenario.performance_data = train_scenario.performance_data.replace(10 * threshold, self.mu * threshold) #todo if preprocessing wanted dont make this a comment
             # self.scaler = preprocessing.MinMaxScaler()
             # transformed_features = self.scaler.fit_transform(transformed_features)
 
