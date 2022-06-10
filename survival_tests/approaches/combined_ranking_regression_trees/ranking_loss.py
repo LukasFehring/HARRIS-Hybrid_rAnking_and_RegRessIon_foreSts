@@ -13,17 +13,46 @@ def modified_position_error(performance_data, borda_score, rankings):
         error += val
     return error / len(rankings)
 
+
 def spearman_rank_correlation(performance_data, borda_score, rankings):
+    consensus_ranking = borda_score(rankings, performance_data)
+    return np.sum((rankings - consensus_ranking) ** 2) / len(rankings) / (len(rankings) - 1) ** 2
+
+
+def spearman_rankk_correlation_no_normalisation(performance_data, borda_score, rankings):
     consensus_ranking = borda_score(rankings, performance_data)
     return np.sum((rankings - consensus_ranking) ** 2) / len(rankings)
 
 
 def spearman_footrule(performance_data, borda_scroe, rankings):
     consensuns_ranking = borda_scroe(rankings, performance_data)
-    return np.sum(abs(rankings - consensuns_ranking)) / len(rankings)
+    return np.sum(abs(rankings - consensuns_ranking)) / len(rankings) / len(rankings) - 1
 
 
-def squared_hinge_loss(performance_data, borda_score, rankings): #does this work?
+def corrected_spearman_footrule(performance_data, borda_scroe, rankings):
+    consensuns_ranking = borda_scroe(rankings, performance_data)
+    return np.sum(abs(rankings - consensuns_ranking)) / len(rankings) / (len(rankings) - 1)
+
+
+def number_of_discordant_pairs(performance_data, borda_score, rankings):
+    consensus_ranking = borda_score(rankings, performance_data)
+    discordant_pairs = 0
+    maximal_discordant_pairs = 0
+    for ranking in rankings:
+        for first_pair in range(len(consensus_ranking)):
+            for second_pair in range(first_pair + 1, len(consensus_ranking)):
+                if (
+                    ranking[first_pair] < ranking[second_pair]
+                    and consensus_ranking[first_pair] > consensus_ranking[second_pair]
+                    or ranking[first_pair] > ranking[second_pair]
+                    and consensus_ranking[first_pair] < consensus_ranking[second_pair]
+                ):
+                    discordant_pairs += 1
+                maximal_discordant_pairs += 1
+    return discordant_pairs / maximal_discordant_pairs / len(rankings)
+
+
+def squared_hinge_loss(performance_data, borda_score, rankings):
     def relevant_algo_pairs(ranking):
         ranking_pairs = list()
         for lower_index, rank in enumerate(ranking):
