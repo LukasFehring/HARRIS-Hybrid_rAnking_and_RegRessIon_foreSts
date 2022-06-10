@@ -22,7 +22,19 @@ from aslib_scenario import ASlibScenario
 
 class BinaryDecisionTree:
     def __init__(
-        self, ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, min_sample_leave=3, min_sample_split=7, stopping_threshold=None, old_threshold=None, loss_overview=list(), mu = 10
+        self,
+        ranking_loss,
+        regression_loss,
+        borda_score,
+        impact_factor,
+        stopping_criterion,
+        min_sample_leave=3,
+        min_sample_split=7,
+        stopping_threshold=None,
+        old_threshold=None,
+        loss_overview=list(),
+        mu=1,
+        do_preprocessing=True,
     ):
         self.left = None
         self.right = None
@@ -46,6 +58,8 @@ class BinaryDecisionTree:
         self.borda_score = borda_score
         self.stopping_criterion = stopping_criterion
         self.mu = mu
+
+        self.preprocessing = do_preprocessing
 
     def get_candidate_splitting_points(self, feature_data: np.array):
         def filter_feature_data(feature_data):
@@ -92,18 +106,20 @@ class BinaryDecisionTree:
         return feature_data
 
     def get_name(self):
-        return "BinaryDecisionTree"
+        return "BinaryDecisionTree_" #+ str(self.mu)
 
     def fit(self, train_scenario: ASlibScenario, fold, amount_of_training_instances, depth=0, do_preprocessing=True):
         def scenario_preporcessing():
             self.imputer = SimpleImputer()
             transformed_features = self.imputer.fit_transform(train_scenario.feature_data.values)
-            threshold = train_scenario.algorithm_cutoff_time
-            #train_scenario.performance_data = train_scenario.performance_data.replace(10 * threshold, self.mu * threshold) #todo if preprocessing wanted dont make this a comment
+            # threshold = train_scenario.algorithm_cutoff_time
+            # train_scenario.performance_data = train_scenario.performance_data.replace(10 * threshold, self.mu * threshold)
             # self.scaler = preprocessing.MinMaxScaler()
             # transformed_features = self.scaler.fit_transform(transformed_features)
-
-            performance_data = preprocessing.MinMaxScaler().fit_transform(train_scenario.performance_data.values)
+            if self.preprocessing:
+                performance_data = preprocessing.MinMaxScaler().fit_transform(train_scenario.performance_data.values)
+            else:
+                performance_data = train_scenario.performance_data.values
             return pd.DataFrame(transformed_features), pd.DataFrame(performance_data)
 
         def split_by_feature_value(feature_data, splitting_point):
@@ -146,7 +162,7 @@ class BinaryDecisionTree:
             loss = calculate_loss(performance_data, smaller_performance_instances, bigger_performance_instances, smaller_ranking_instances, bigger_ranking_instances)
             return loss
 
-        if depth == 0 and do_preprocessing:
+        if depth == 0:
             train_scenario.feature_data, train_scenario.performance_data = scenario_preporcessing()
 
         feature_data = train_scenario.feature_data.values
