@@ -1,5 +1,6 @@
 import math
 from copy import deepcopy
+from dis import disco
 
 import numpy as np
 from scipy.stats import kendalltau, rankdata
@@ -8,16 +9,33 @@ from sklearn.preprocessing import minmax_scale
 
 class KendallsTau_b:
     def evaluate(self, gt_runtimes: np.ndarray, predicted_scores: np.ndarray, feature_cost: float, algorithm_cutoff_time: int):
-        """
-        gr_runtiems = ground truth runtimes, daher die aus dem test
-        predicted scores ist meine ausgabe des algos. also beispielsweise laufzueit oder score
-        feature cost ist die summe der zeit der feature berechnung - daher wird sie im part10 dazu addiert - in anderen muss man es sich im detail anschauen"""
-        x = rankdata(gt_runtimes, method = 'min')
-        y = rankdata(predicted_scores, method = 'min')
+        x = rankdata(gt_runtimes, method="min")
+        y = rankdata(predicted_scores, method="min")
 
-        if np.isnan(kendalltau(x, y).correlation):
-            print()
-        return kendalltau(x, y).correlation
+        relevant_pairs = {(i, j) for i in range(len(x)) for j in range(len(y)) if i < j}
+
+        # caclulate concordant instances
+        concordant_instances = 0
+        discordant_instances = 0
+        tied_predicted_instances = 0
+        tied_gt_instances = 0
+        for pair in relevant_pairs:
+            if x[pair[0]] < x[pair[1]] and y[pair[0]] < y[pair[1]]:
+                concordant_instances += 1
+            elif x[pair[0]] > x[pair[1]] and y[pair[0]] > y[pair[1]]:
+                concordant_instances += 1
+            elif x[pair[0]] < x[pair[1]] and y[pair[0]] > y[pair[1]]:
+                discordant_instances += 1
+            elif x[pair[0]] > x[pair[1]] and y[pair[0]] < y[pair[1]]:
+                discordant_instances += 1
+            if x[pair[0]] == x[pair[1]]:
+                tied_gt_instances += 1
+            if y[pair[0]] == y[pair[1]]:
+                tied_predicted_instances += 1
+        try:
+            return (concordant_instances - discordant_instances) / math.sqrt((len(relevant_pairs) - tied_gt_instances) * (relevant_pairs - tied_predicted_instances))
+        except ZeroDivisionError:
+            return 10000000000000000000000000  # arbitrary high so mistake in data is recognized
 
     def get_name(self):
         return "KendallsTau_b"
@@ -31,7 +49,7 @@ class NDCG:
         predicted_ranking = rankdata(predicted_scores)
         gt_ranking = rankdata(gt_scores)
 
-        predicted_scores_sum = np.sum((gt_scores - 1) / np.log2(1 + predicted_ranking))
+        predicted_scores_sum = np.sum((-gt_scores + 1 - 1) / np.log2(1 + predicted_ranking))
         return predicted_scores_sum / np.sum((gt_scores - 1) / np.log2(1 + gt_ranking))
 
     def get_name(self):
