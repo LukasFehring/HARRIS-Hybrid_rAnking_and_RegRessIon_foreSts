@@ -7,7 +7,7 @@ from scipy.stats import rankdata
 from approaches.combined_ranking_regression_trees.borda_score import borda_score_mean_performance, borda_score_mean_ranking
 from approaches.combined_ranking_regression_trees.ranking_loss import spearman_rank_correlation
 from approaches.combined_ranking_regression_trees.ranking_transformer import calculate_ranking_from_performance_data
-from approaches.combined_ranking_regression_trees.regression_error_loss import regression_error_loss
+from approaches.combined_ranking_regression_trees.regression_error_loss import mean_square_error
 
 
 def loss_under_threshold(
@@ -16,7 +16,7 @@ def loss_under_threshold(
     def _calc_loss():
         ranking_instances = calculate_ranking_from_performance_data(performance_data)
         ranking_error = ranking_loss(performance_data, borda_score, ranking_instances)
-        regression_error = regression_error_loss(performance_data)
+        regression_error = mean_square_error(performance_data)
         return impact_factor * ranking_error + (1 - impact_factor) * regression_error
 
     if min_sample_split is not None and np.ma.size(performance_data, axis=0) < min_sample_split:

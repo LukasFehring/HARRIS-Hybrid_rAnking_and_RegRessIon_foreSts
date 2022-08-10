@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 
-def regression_error_loss(performance_data: np.array):
+def mean_square_error(performance_data: np.array):
     def mean_by_instance(performance_data: np.array):
         if len(performance_data) > 1:
             return performance_data.var(axis=0)

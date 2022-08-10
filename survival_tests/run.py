@@ -21,9 +21,11 @@ from approaches.combined_ranking_regression_trees.evaulation_metrices import NDC
 from approaches.combined_ranking_regression_trees.ranking_loss import (corrected_spearman_footrule, modified_position_error,
                                                                        number_of_discordant_pairs, spearman_footrule, spearman_rank_correlation,
                                                                        spearman_rankk_correlation_no_normalisation, squared_hinge_loss)
-from approaches.combined_ranking_regression_trees.regression_error_loss import regression_error_loss
+from approaches.combined_ranking_regression_trees.regression_error_loss import mean_square_error
 from approaches.combined_ranking_regression_trees.stopping_criteria import loss_under_threshold, max_depth, same_ranking, same_ranking_percentage
 from approaches.oracle import Oracle
+from approaches.ranking_and_regression_forest.combined_ranking_and_regression_forest import CombinedRankingAndRegressionForest as Forest
+from approaches.ranking_and_regression_forest.consensus import average_runtimes, max_runtimes, min_runtimes
 from approaches.single_best_solver import SingleBestSolver
 from approaches.survival_forests.auto_surrogate import SurrogateAutoSurvivalForest
 from approaches.survival_forests.surrogate import SurrogateSurvivalForest
@@ -102,11 +104,11 @@ def create_approach(approach_names):
         if approach_name == "ablation_study_stopping_criteria":
             impact_factor = 0.6
             ranking_loss = corrected_spearman_footrule
-            regression_loss = copy.deepcopy(regression_error_loss)
+            regression_loss = copy.deepcopy(mean_square_error)
             borda_score = borda_score_mean_ranking
             for stopping_criterion in [loss_under_threshold, max_depth, same_ranking, same_ranking_percentage]:
                 if stopping_criterion == max_depth:
-                    for stopping_threshold in (0,1, 2, 3, 4, 5):
+                    for stopping_threshold in (0, 1, 2, 3, 4, 5):
                         binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
                         approaches.append(binary_decision_tree)
                 elif stopping_criterion == loss_under_threshold:
@@ -124,7 +126,7 @@ def create_approach(approach_names):
         if approach_name == "ablation_study_lambda":
             for impact_factor in np.arange(0.0, 1.05, 0.05):
                 ranking_loss = copy.deepcopy(corrected_spearman_footrule)
-                regression_loss = copy.deepcopy(regression_error_loss)
+                regression_loss = copy.deepcopy(mean_square_error)
                 borda_score = borda_score_mean_ranking
                 stopping_threshold = 3
                 stopping_criterion = max_depth
@@ -135,7 +137,7 @@ def create_approach(approach_names):
             for borda_score in (borda_score_mean_performance, borda_score_mean_ranking, borda_score_median_ranking, geometric_mean_performance):
                 impact_factor = 0.6
                 ranking_loss = copy.deepcopy(spearman_footrule)
-                regression_loss = copy.deepcopy(regression_error_loss)
+                regression_loss = copy.deepcopy(mean_square_error)
                 stopping_threshold = 3
                 stopping_criterion = max_depth
                 binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
@@ -144,7 +146,7 @@ def create_approach(approach_names):
         if approach_name == "ablation_study_ranking_loss":
             for ranking_loss in (modified_position_error, corrected_spearman_footrule, spearman_rank_correlation, squared_hinge_loss, number_of_discordant_pairs):
                 borda_score = borda_score_mean_ranking
-                regression_loss = copy.deepcopy(regression_error_loss)
+                regression_loss = copy.deepcopy(mean_square_error)
                 stopping_threshold = 3
                 stopping_criterion = max_depth
                 impact_factor = 0.6
@@ -155,28 +157,27 @@ def create_approach(approach_names):
             for ranking_loss in (modified_position_error, spearman_rank_correlation, number_of_discordant_pairs, squared_hinge_loss):
                 for impact_factor in np.arange(0.0, 1.05, 0.1):
                     borda_score = borda_score_mean_ranking
-                    regression_loss = copy.deepcopy(regression_error_loss)
+                    regression_loss = copy.deepcopy(mean_square_error)
                     stopping_threshold = 3
                     stopping_criterion = max_depth
                     binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
                     approaches.append(binary_decision_tree)
-                    
+
         if approach_name == "loss_analysis_discordant_pairs_and_lambda":
-             for impact_factor in np.arange(0.0, 1.025, 0.025):
+            for impact_factor in np.arange(0.0, 1.025, 0.025):
                 ranking_loss = copy.deepcopy(number_of_discordant_pairs)
-                regression_loss = copy.deepcopy(regression_error_loss)
+                regression_loss = copy.deepcopy(mean_square_error)
                 borda_score = borda_score_mean_ranking
                 stopping_threshold = 3
                 stopping_criterion = max_depth
                 binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
                 approaches.append(binary_decision_tree)
-            
-            
-        if approach_name == 'comparison_to_others':
-            #corrected_spearman
+
+        if approach_name == "comparison_to_others":
+            # corrected_spearman
             for impact_factor in np.arange(0.0, 1.05, 0.1):
                 ranking_loss = copy.deepcopy(corrected_spearman_footrule)
-                regression_loss = copy.deepcopy(regression_error_loss)
+                regression_loss = copy.deepcopy(mean_square_error)
                 borda_score = borda_score_mean_ranking
                 for stopping_threshold in (4,):
                     stopping_criterion = max_depth
@@ -185,9 +186,9 @@ def create_approach(approach_names):
 
         if approach_name == "ablation_study_mu":
             for mu in (1, 1.1, 1.2, 1.3, 1.4, 1.5, 1.75, 2, 3, 4, 5, 7.5, 10, 15, 20):
-                for impact_factor in (0,1):
+                for impact_factor in (0, 1):
                     borda_score = borda_score_mean_ranking
-                    regression_loss = copy.deepcopy(regression_error_loss)
+                    regression_loss = copy.deepcopy(mean_square_error)
                     ranking_loss = corrected_spearman_footrule
                     stopping_threshold = 3
                     stopping_criterion = max_depth
@@ -198,7 +199,7 @@ def create_approach(approach_names):
             ranking_loss = spearman_rankk_correlation_no_normalisation
             for impact_factor in np.arange(0.0, 1.05, 0.1):
                 borda_score = borda_score_mean_ranking
-                regression_loss = copy.deepcopy(regression_error_loss)
+                regression_loss = copy.deepcopy(mean_square_error)
                 stopping_threshold = 3
                 stopping_criterion = max_depth
                 binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold, do_preprocessing=False)
@@ -207,21 +208,45 @@ def create_approach(approach_names):
             ranking_loss = spearman_rank_correlation
             for impact_factor in np.arange(0.0, 1.05, 0.1):
                 borda_score = borda_score_mean_ranking
-                regression_loss = copy.deepcopy(regression_error_loss)
+                regression_loss = copy.deepcopy(mean_square_error)
                 stopping_threshold = 3
                 stopping_criterion = max_depth
                 binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold, do_preprocessing=True)
                 approaches.append(binary_decision_tree)
 
-            #modified position error #todo das einmal einkommentieren für das eine scenario in dem die gut sind
+            # modified position error #todo das einmal einkommentieren für das eine scenario in dem die gut sind
             for impact_factor in np.arange(0.0, 1.05, 0.1):
                 ranking_loss = copy.deepcopy(modified_position_error)
-                regression_loss = copy.deepcopy(regression_error_loss)
+                regression_loss = copy.deepcopy(mean_square_error)
                 borda_score = borda_score_mean_ranking
-                for stopping_threshold in (1,2,3,4):
+                for stopping_threshold in (1, 2, 3, 4):
                     stopping_criterion = max_depth
                     binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
                     approaches.append(binary_decision_tree)
+
+        if approach_name == "fix_squared_hinge_loss":
+            impact_factor = 0.6
+            ranking_loss = copy.deepcopy(squared_hinge_loss)
+            regression_loss = copy.deepcopy(mean_square_error)
+            borda_score = borda_score_mean_ranking
+            stopping_threshold = 3
+            stopping_criterion = max_depth
+            binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+            approaches.append(binary_decision_tree)
+
+        if approach_name == "combined_forest":
+            ranking_loss = copy.deepcopy(modified_position_error)
+            regression_loss = copy.deepcopy(mean_square_error)
+            borda_score = borda_score_mean_ranking
+            for stopping_threshold in (1, 2, 3):
+                for impact_factor in (0, 0.25, 0.5, 0.75, 1):
+                    for consensus_function in (average_runtimes, max_runtimes, min_runtimes):
+                        for amount_of_trees in (20, 30):
+                            stopping_criterion = max_depth
+                            binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                            forest = Forest(amount_of_trees, binary_decision_tree, consensus=consensus_function)
+                            approaches.append(forest)
+
     return approaches
 
 
@@ -251,7 +276,7 @@ tune_hyperparameters = bool(int(config["EXPERIMENTS"]["tune_hyperparameters"]))
 
 
 for scenario in scenarios:
-    for fold in range(1, 11):
+    for fold in range(1, 6):
         approaches = create_approach(approach_names)
 
         if len(approaches) < 1:
@@ -260,11 +285,11 @@ for scenario in scenarios:
             metrics = list()
             metrics.append(Par10Metric())
             metrics.append(NDCG())
-            # metrics.append(KendallsTau_b())
+            metrics.append(KendallsTau_b())
             metrics.append(Performance_Regret())
             if approach.get_name() != "oracle":
                 metrics.append(NumberUnsolvedInstances(False))
-                # metrics.append(NumberUnsolvedInstances(True))
+                metrics.append(NumberUnsolvedInstances(True))
 
             if debug_mode:
                 evaluate_scenario(scenario, approach, metrics, amount_of_scenario_training_instances, fold, config, tune_hyperparameters)
