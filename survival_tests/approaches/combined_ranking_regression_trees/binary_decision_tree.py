@@ -16,7 +16,7 @@ import pandas as pd
 from sklearn.impute import SimpleImputer
 
 from approaches.combined_ranking_regression_trees.ranking_transformer import calculate_ranking_from_performance_data
-from approaches.combined_ranking_regression_trees.regression_error_loss import regression_error_loss
+from approaches.combined_ranking_regression_trees.regression_error_loss import mean_square_error
 from aslib_scenario import ASlibScenario
 
 
@@ -106,14 +106,14 @@ class BinaryDecisionTree:
         return feature_data
 
     def get_name(self):
-        return "BinaryDecisionTree_" #+ str(self.mu)
+        return "BinaryDecisionTree_" + str(self.mu)
 
     def fit(self, train_scenario: ASlibScenario, fold, amount_of_training_instances, depth=0, do_preprocessing=True):
         def scenario_preporcessing():
             self.imputer = SimpleImputer()
             transformed_features = self.imputer.fit_transform(train_scenario.feature_data.values)
-            # threshold = train_scenario.algorithm_cutoff_time
-            # train_scenario.performance_data = train_scenario.performance_data.replace(10 * threshold, self.mu * threshold)
+            threshold = train_scenario.algorithm_cutoff_time
+            train_scenario.performance_data = train_scenario.performance_data.replace(10 * threshold, self.mu * threshold)
             # self.scaler = preprocessing.MinMaxScaler()
             # transformed_features = self.scaler.fit_transform(transformed_features)
             if self.preprocessing:
@@ -133,8 +133,8 @@ class BinaryDecisionTree:
                 if self.impact_factor == 1:
                     return 0
                 else:
-                    smaller_regression_error_loss = regression_error_loss(smaller_performance_instances) * len(smaller_performance_instances) / len(performance_data)
-                    bigger_regression_error_loss = regression_error_loss(bigger_performance_instances) * len(bigger_performance_instances) / len(performance_data)
+                    smaller_regression_error_loss = mean_square_error(smaller_performance_instances) * len(smaller_performance_instances) / len(performance_data)
+                    bigger_regression_error_loss = mean_square_error(bigger_performance_instances) * len(bigger_performance_instances) / len(performance_data)
 
                     return smaller_regression_error_loss + bigger_regression_error_loss
 
@@ -169,8 +169,6 @@ class BinaryDecisionTree:
         performance_data = train_scenario.performance_data.values
 
         self.fold = fold
-        self.instance_number_map = {i: name for i, name in enumerate(train_scenario.instances)}
-        self.feature_number_map = {i: name for i, name in enumerate(train_scenario.features)}
 
         rankings = calculate_ranking_from_performance_data(performance_data)
         # print(type(rankings))
@@ -221,9 +219,9 @@ class BinaryDecisionTree:
             # print(f"amount of bigger rankings is {len(bigger_ranking_instances)/len(performance_data)} of the length of instances")
 
             # calculate smalelr and bigger loss
-            regression_loss = regression_error_loss(smaller_performance_instances) * len(smaller_performance_instances) / len(performance_data) + regression_error_loss(
+            regression_loss = mean_square_error(smaller_performance_instances) * len(smaller_performance_instances) / len(performance_data) + mean_square_error(bigger_performance_instances) * len(
                 bigger_performance_instances
-            ) * len(bigger_performance_instances) / len(performance_data)
+            ) / len(performance_data)
             ranking_loss = self.ranking_loss(smaller_performance_instances, self.borda_score, smaller_ranking_instances) * len(smaller_performance_instances) / len(
                 performance_data
             ) + self.ranking_loss(bigger_performance_instances, self.borda_score, bigger_ranking_instances) * len(bigger_performance_instances) / len(performance_data)

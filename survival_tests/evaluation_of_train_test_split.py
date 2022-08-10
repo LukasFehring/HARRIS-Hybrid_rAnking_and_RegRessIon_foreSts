@@ -54,7 +54,13 @@ def evaluate_train_test_split(scenario: ASlibScenario, approach, metrics, fold: 
             num_counted_test_values += 1
             predicted_scores = approach.predict(X_test, instance_id)
             for i, metric in enumerate(metrics):
-                performance = metric.evaluate(y_test, predicted_scores, accumulated_feature_time, scenario.algorithm_cutoff_time)
+                if metric.get_name() == "KendallsTau_b" and (np.all(predicted_scores == predicted_scores[0]) or np.all(y_test == y_test[0])):
+                    continue
+                try:
+                    performance = metric.evaluate(y_test, predicted_scores, accumulated_feature_time, scenario.algorithm_cutoff_time)
+                except Exception as e:
+                    logging.error(e)
+                    continue
                 approach_metric_values[i] = approach_metric_values[i] + performance
 
     approach_metric_values = np.true_divide(approach_metric_values, num_counted_test_values)

@@ -10,7 +10,7 @@ from approaches.combined_ranking_regression_trees.binary_decision_tree import Bi
 from approaches.combined_ranking_regression_trees.borda_score import borda_score_mean_ranking
 from approaches.combined_ranking_regression_trees.ranking_loss import *
 from approaches.combined_ranking_regression_trees.ranking_transformer import calculate_ranking_from_performance_data
-from approaches.combined_ranking_regression_trees.regression_error_loss import regression_error_loss
+from approaches.combined_ranking_regression_trees.regression_error_loss import mean_square_error
 from approaches.combined_ranking_regression_trees.stopping_criteria import loss_under_threshold
 from aslib_scenario import ASlibScenario
 
@@ -27,7 +27,7 @@ class BinaryDecisionTreeTest(unittest.TestCase):
         self.scenario.feature_data = self.scenario.feature_data.iloc[:200]
 
         basinc_ranking_loss = squared_hinge_loss
-        basic_regression_loss = regression_error_loss
+        basic_regression_loss = mean_square_error
         basic_borda_score = borda_score_mean_ranking
         basic_impact_factor = 0.9
         basic_stopping_criterion = loss_under_threshold

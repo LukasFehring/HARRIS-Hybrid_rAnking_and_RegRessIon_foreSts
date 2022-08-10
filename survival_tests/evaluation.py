@@ -4,6 +4,7 @@ import numpy as np
 
 import database_utils
 from approaches.combined_ranking_regression_trees.binary_decision_tree import BinaryDecisionTree
+from approaches.ranking_and_regression_forest.combined_ranking_and_regression_forest import CombinedRankingAndRegressionForest
 from aslib_scenario import ASlibScenario
 from evaluation_of_train_test_split import evaluate_train_test_split
 from hyperparameter_optimizer import HyperParameterOptimizer
@@ -33,6 +34,41 @@ def publish_results_to_database(approach, db_config, scenario_name: str, fold: i
                 approach.ranking_loss.__name__,
                 approach.borda_score.__name__,
                 f"{approach.stopping_criterion.__name__}_{str(approach.stopping_threshold)}",
+                str(result),
+            )
+        else:
+            sql_statement = (
+                "INSERT INTO " + table_name + " (scenario_name, fold, approach, metric, impact_factor, ranking_error, borda_score, stopping_criteria) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"
+            )
+            values = (
+                scenario_name,
+                str(fold),
+                approach.get_name(),
+                metric_name,
+                str(approach.impact_factor),
+                approach.ranking_loss.__name__,
+                approach.borda_score.__name__,
+                f"{approach.stopping_criterion.__name__}_{str(approach.stopping_threshold)}",
+            )
+    elif "CombinedForest" in approach.get_name():
+        approach: CombinedRankingAndRegressionForest = approach
+        underlying_tree = approach.trees[0]
+
+        if not np.isnan(result):
+            sql_statement = (
+                "INSERT INTO "
+                + table_name
+                + " (scenario_name, fold, approach, metric, impact_factor, ranking_error, borda_score, stopping_criteria, result) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            )
+            values = (
+                scenario_name,
+                str(fold),
+                approach.get_name(),
+                metric_name,
+                str(underlying_tree.impact_factor),
+                underlying_tree.ranking_loss.__name__,
+                underlying_tree.borda_score.__name__,
+                f"{underlying_tree.stopping_criterion.__name__}_{str(underlying_tree.stopping_threshold)}",
                 str(result),
             )
         else:

@@ -6,7 +6,7 @@ import pickle
 from approaches.combined_ranking_regression_trees.binary_decision_tree import BinaryDecisionTree
 from approaches.combined_ranking_regression_trees.borda_score import borda_score_mean_ranking
 from approaches.combined_ranking_regression_trees.ranking_loss import corrected_spearman_footrule
-from approaches.combined_ranking_regression_trees.regression_error_loss import regression_error_loss
+from approaches.combined_ranking_regression_trees.regression_error_loss import mean_square_error
 from approaches.combined_ranking_regression_trees.stopping_criteria import max_depth
 from approaches.single_best_solver import SingleBestSolver
 from approaches.survival_forests.surrogate import SurrogateSurvivalForest
@@ -20,7 +20,7 @@ models_to_evaluate = {
 }
 impact_factor = 0.6
 ranking_loss = copy.deepcopy(corrected_spearman_footrule)
-regression_loss = copy.deepcopy(regression_error_loss)
+regression_loss = copy.deepcopy(mean_square_error)
 borda_score = borda_score_mean_ranking
 for stopping_threshold in (
     2,
