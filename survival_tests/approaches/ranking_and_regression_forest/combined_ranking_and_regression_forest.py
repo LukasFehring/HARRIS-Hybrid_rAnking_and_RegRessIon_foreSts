@@ -1,25 +1,35 @@
 import copy
 import logging
+import math
+import random
 
 import numpy as np
 import pandas as pd
+from pyexpat import features
 
 from approaches.combined_ranking_regression_trees.binary_decision_tree import BinaryDecisionTree
 from aslib_scenario import ASlibScenario
 
+logger = logging.getLogger("run")
+
 
 class CombinedRankingAndRegressionForest:
-    def __init__(self, amount_of_trees, tree: BinaryDecisionTree, consensus) -> None:
+    def __init__(self, amount_of_trees, tree: BinaryDecisionTree, consensus, feature_percentage=1) -> None:
         self.trees = [copy.deepcopy(tree) for _ in range(amount_of_trees)]
         self.consensus = consensus
+        self.feature_percentage = feature_percentage
+        self.list_of_bagged_features = []
+        self.amount_of_features = 0
 
     def get_name(self):
-        return f"CombinedForest with {len(self.trees)} trees, {self.consensus.__name__} as consensus"
+        return f"CombinedForest with {len(self.trees)} trees, {self.consensus.__name__} as consensus, {self.feature_percentage} of features"
 
     def fit(self, train_scenario: ASlibScenario, fold, amount_of_training_instances, depth=0, do_preprocessing=True):
+        self.amount_of_features = math.ceil(len(train_scenario.features) * self.feature_percentage)
+        if self.amount_of_features == 0:
+            logger.error(f"No features selected for scenario {train_scenario.name}, and fold {fold}, consensus {self.consensus.__name__}, amount of trees {len(self.trees)}")
+            raise Exception("No features selected")
         for treenumber, tree in enumerate(self.trees):
-            logging.info(f"Fitting tree {treenumber}")
-
             selected_instances = copy.deepcopy(train_scenario)
 
             feature_data = []
@@ -31,16 +41,28 @@ class CombinedRankingAndRegressionForest:
                 feature_data.append(train_scenario.feature_data.iloc[number_of_chosen_instance, :])
                 performance_data.append(train_scenario.performance_data.iloc[number_of_chosen_instance, :])
 
-            # todo bagging for features
-                
             selected_instances.feature_data = pd.DataFrame(columns=train_scenario.feature_data.columns, data=feature_data)
             selected_instances.performance_data = pd.DataFrame(columns=train_scenario.performance_data.columns, data=performance_data)
+
+            selected_features = self.selet_features(train_scenario)
+            selected_features_positions = [train_scenario.features.index(feature) for feature in selected_features]
+            self.list_of_bagged_features.append(selected_features_positions)
+
+            selected_instances.features = selected_features
+            selected_instances.feature_data = selected_instances.feature_data[selected_features]
+
+            logger.debug(f"Fitting tree {treenumber} with {len(selected_features)} features")
+
             tree.fit(selected_instances, fold, amount_of_training_instances, depth, do_preprocessing)
 
         return self
 
     def predict(self, features: np.array, scenario):
         predictions = []
-        for tree in self.trees:
-            predictions.append(tree.predict(features, scenario))
+        for tree, selected_features in zip(self.trees, self.list_of_bagged_features):
+            tree_features = features[selected_features]
+            predictions.append(tree.predict(tree_features, scenario))
         return self.consensus(predictions)
+
+    def selet_features(self, scenario: ASlibScenario):
+        return random.sample(scenario.features, self.amount_of_features)
