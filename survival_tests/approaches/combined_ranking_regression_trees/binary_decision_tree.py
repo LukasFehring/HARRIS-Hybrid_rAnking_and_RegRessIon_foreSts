@@ -62,48 +62,10 @@ class BinaryDecisionTree:
         self.preprocessing = do_preprocessing
 
     def get_candidate_splitting_points(self, feature_data: np.array):
-        def filter_feature_data(feature_data):
-            lower_split = self.min_sample_leave
-
-            finished = len(np.unique(feature_data[:lower_split])) == self.min_sample_leave
-
-            if not finished:
-                lower_split = lower_split - 1
-                last_val = feature_data[lower_split]
-                while not finished:
-                    old_val = last_val
-                    lower_split += 1
-                    try:
-                        last_val = feature_data[lower_split]
-                        if last_val > old_val:
-                            finished = True
-                    except (LookupError, IndexError) as e:
-                        return np.array([], np.float64)
-
-            higher_split = -self.min_sample_leave
-            finished = len(np.unique(feature_data[higher_split:])) == self.min_sample_leave
-
-            if not finished:
-                last_val = feature_data[-higher_split]
-                while not finished:
-                    old_val = last_val
-                    higher_split -= 1
-                    try:
-                        last_val = feature_data[higher_split]
-                        if last_val < old_val:
-                            finished = True
-                    except LookupError as e:
-                        return np.array([], np.float64)
-
-            if feature_data[lower_split] < feature_data[higher_split]:
-                return feature_data[lower_split:higher_split]
-
-            else:
-                return np.array([], np.float64)
-
         feature_data.sort()
-        feature_data = filter_feature_data(feature_data)
-        return feature_data
+        lower_split_value = feature_data[self.min_sample_leave]
+        higher_split_value = feature_data[-self.min_sample_leave]
+        return feature_data[(lower_split_value < feature_data) & (feature_data < higher_split_value)]
 
     def get_name(self):
         return "BinaryDecisionTree_" + str(self.mu)
@@ -187,6 +149,7 @@ class BinaryDecisionTree:
             self.label = np.average(performance_data, axis=0)
         else:
             best_known_split_loss = math.inf
+            best_known_split_point = best_known_split_feature = None
             for feature in range(len(train_scenario.features)):
                 candidate_splitting_points = self.get_candidate_splitting_points(feature_data[:, feature])
 
@@ -197,11 +160,11 @@ class BinaryDecisionTree:
                         best_known_split_loss = split_loss
                         best_known_split_feature = feature
                         best_known_split_point = splitting_point
-            try:
-                self.splitting_feature = best_known_split_feature
-            except UnboundLocalError:
-                self.get_candidate_splitting_points(feature_data[:, feature])
+            if best_known_split_feature is None:
+                self.label = np.average(performance_data, axis=0)
+                return self
             self.splitting_value = best_known_split_point
+            self.splitting_feature = best_known_split_feature
             smaller_instances, bigger_instances = split_by_feature_value(feature_data[:, best_known_split_feature], best_known_split_point)
 
             smaller_scenario = deepcopy(train_scenario)
