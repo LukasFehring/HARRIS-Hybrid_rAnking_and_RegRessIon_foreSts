@@ -51,8 +51,6 @@ class CombinedRankingAndRegressionForest:
             selected_instances.features = selected_features
             selected_instances.feature_data = selected_instances.feature_data[selected_features]
 
-            logger.debug(f"Fitting tree {treenumber} with {len(selected_features)} features")
-
             tree.fit(selected_instances, fold, amount_of_training_instances, depth, do_preprocessing)
 
         return self

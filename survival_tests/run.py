@@ -278,7 +278,7 @@ initialize_logging()
 config = load_configuration()
 logger.info("Running experiments with config:")
 print_config(config)
-debug_mode = True
+debug_mode = False
 if debug_mode:
     logger.setLevel(logging.DEBUG)
 # fold = int(sys.argv[1])
