@@ -15,12 +15,17 @@ from sklearn.linear_model import Ridge
 
 import database_utils
 from approaches.combined_ranking_regression_trees.binary_decision_tree import BinaryDecisionTree
-from approaches.combined_ranking_regression_trees.borda_score import (borda_score_mean_performance, borda_score_mean_ranking,
-                                                                      borda_score_median_ranking, geometric_mean_performance)
+from approaches.combined_ranking_regression_trees.borda_score import borda_score_mean_performance, borda_score_mean_ranking, borda_score_median_ranking, geometric_mean_performance
 from approaches.combined_ranking_regression_trees.evaulation_metrices import NDCG, KendallsTau_b, Performance_Regret
-from approaches.combined_ranking_regression_trees.ranking_loss import (corrected_spearman_footrule, modified_position_error,
-                                                                       number_of_discordant_pairs, spearman_footrule, spearman_rank_correlation,
-                                                                       spearman_rankk_correlation_no_normalisation, squared_hinge_loss)
+from approaches.combined_ranking_regression_trees.ranking_loss import (
+    corrected_spearman_footrule,
+    modified_position_error,
+    number_of_discordant_pairs,
+    spearman_footrule,
+    spearman_rank_correlation,
+    spearman_rankk_correlation_no_normalisation,
+    squared_hinge_loss,
+)
 from approaches.combined_ranking_regression_trees.regression_error_loss import mean_square_error
 from approaches.combined_ranking_regression_trees.stopping_criteria import loss_under_threshold, max_depth, same_ranking, same_ranking_percentage
 from approaches.oracle import Oracle
@@ -244,8 +249,23 @@ def create_approach(approach_names):
                         for amount_of_trees in (20, 30):
                             stopping_criterion = max_depth
                             binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
-                            forest = Forest(amount_of_trees, binary_decision_tree, consensus=consensus_function)
+                            forest = Forest(amount_of_trees, binary_decision_tree, consensus=consensus_function, feature_percentage=100)
                             approaches.append(forest)
+
+        if approach_name == "evaluate_feature_bagging":
+            ranking_loss = copy.deepcopy(modified_position_error)
+            regression_loss = copy.deepcopy(mean_square_error)
+            borda_score = borda_score_mean_ranking
+            stopping_threshold = 2
+            impact_factor = 0.5
+            stopping_criterion = max_depth
+            amount_of_trees = 20
+            for consensus_function in (average_runtimes, max_runtimes, min_runtimes):
+                for feature_percentage in (0.5, 1):
+                    stopping_criterion = max_depth
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    forest = Forest(amount_of_trees, binary_decision_tree, consensus=consensus_function, feature_percentage=feature_percentage)
+                    approaches.append(forest)
 
     return approaches
 
@@ -258,7 +278,9 @@ initialize_logging()
 config = load_configuration()
 logger.info("Running experiments with config:")
 print_config(config)
-debug_mode = False
+debug_mode = True
+if debug_mode:
+    logger.setLevel(logging.DEBUG)
 # fold = int(sys.argv[1])
 # logger.info("Running experiments for fold " + str(fold))
 
