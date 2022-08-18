@@ -239,31 +239,73 @@ def create_approach(approach_names):
             binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
             approaches.append(binary_decision_tree)
 
-        if approach_name == "combined_forest":
+        if approach_name == "evaluate_feature_bagging_with_deep_tree":
             ranking_loss = copy.deepcopy(modified_position_error)
             regression_loss = copy.deepcopy(mean_square_error)
             borda_score = borda_score_mean_ranking
-            for stopping_threshold in (1, 2, 3):
-                for impact_factor in (0, 0.25, 0.5, 0.75, 1):
-                    for consensus_function in (average_runtimes, max_runtimes, min_runtimes):
-                        for amount_of_trees in (20, 30):
-                            stopping_criterion = max_depth
-                            binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
-                            forest = Forest(amount_of_trees, binary_decision_tree, consensus=consensus_function, feature_percentage=100)
-                            approaches.append(forest)
-
-        if approach_name == "evaluate_feature_bagging":
-            ranking_loss = copy.deepcopy(modified_position_error)
-            regression_loss = copy.deepcopy(mean_square_error)
-            borda_score = borda_score_mean_ranking
-            stopping_threshold = 2
             impact_factor = 0.5
             stopping_criterion = max_depth
-            amount_of_trees = 20
+            amount_of_trees = 30
+            stopping_depth = 3
+            consensus_function = average_runtimes
+            for feature_percentage in (0.3, 0.7, 1):
+                stopping_criterion = max_depth
+                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_depth)
+                forest = Forest(amount_of_trees, binary_decision_tree, consensus=consensus_function, feature_percentage=feature_percentage)
+                approaches.append(forest)
+
+        if approach_name == "evaluate_tree_depth":
+            ranking_loss = copy.deepcopy(modified_position_error)
+            regression_loss = copy.deepcopy(mean_square_error)
+            borda_score = borda_score_mean_ranking
+            impact_factor = 0.5
+            stopping_criterion = max_depth
+            amount_of_trees = 30
+            feature_percentage = 0.7
+            consensus_function = average_runtimes
+            for stopping_depth in (3, 4, 5):
+                stopping_criterion = max_depth
+                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_depth)
+                forest = Forest(amount_of_trees, binary_decision_tree, consensus=consensus_function, feature_percentage=feature_percentage)
+                approaches.append(forest)
+
+        if approach_name == "evaluate_consensus_function":
+            ranking_loss = copy.deepcopy(modified_position_error)
+            regression_loss = copy.deepcopy(mean_square_error)
+            borda_score = borda_score_mean_ranking
+            impact_factor = 0.5
+            stopping_criterion = max_depth
+            amount_of_trees = 30
+            feature_percentage = 0.7
             for consensus_function in (average_runtimes, max_runtimes, min_runtimes):
-                for feature_percentage in (0.5, 1):
+                stopping_criterion = max_depth
+                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_depth)
+                forest = Forest(amount_of_trees, binary_decision_tree, consensus=consensus_function, feature_percentage=feature_percentage)
+                approaches.append(forest)
+
+        if approach_name == "evaluate_amount_of_trees":
+            ranking_loss = copy.deepcopy(modified_position_error)
+            regression_loss = copy.deepcopy(mean_square_error)
+            borda_score = borda_score_mean_ranking
+            impact_factor = 0.5
+            stopping_criterion = max_depth
+            feature_percentage = 0.7
+            for amount_of_trees in (30, 40, 50):
+                stopping_criterion = max_depth
+                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_depth)
+                forest = Forest(amount_of_trees, binary_decision_tree, consensus=consensus_function, feature_percentage=feature_percentage)
+                approaches.append(forest)
+
+        if approach_name == "evaluate_ranking_loss_and_lambda":  # todo das hier wird noch nicht ausgewertet
+            regression_loss = copy.deepcopy(mean_square_error)
+            borda_score = borda_score_mean_ranking
+            stopping_criterion = max_depth
+            amount_of_trees = 20
+            feature_percentage = 0.7
+            for ranking_loss in (modified_position_error, squared_hinge_loss, corrected_spearman_footrule):
+                for impact_factor in np.arange(0.0, 1.05, 0.1):
                     stopping_criterion = max_depth
-                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_depth)
                     forest = Forest(amount_of_trees, binary_decision_tree, consensus=consensus_function, feature_percentage=feature_percentage)
                     approaches.append(forest)
 
