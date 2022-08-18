@@ -29,12 +29,13 @@ class CombinedRankingAndRegressionForest:
         if self.amount_of_features == 0:
             logger.error(f"No features selected for scenario {train_scenario.name}, and fold {fold}, consensus {self.consensus.__name__}, amount of trees {len(self.trees)}")
             raise Exception("No features selected")
-        for treenumber, tree in enumerate(self.trees):
+        for tree in self.trees:
             selected_instances = copy.deepcopy(train_scenario)
 
             feature_data = []
             performance_data = []
 
+            #select instances
             for _ in range(len(train_scenario.performance_data)):
                 number_of_chosen_instance = np.random.random_integers(0, len(train_scenario.performance_data) - 1)
 
@@ -44,14 +45,15 @@ class CombinedRankingAndRegressionForest:
             selected_instances.feature_data = pd.DataFrame(columns=train_scenario.feature_data.columns, data=feature_data)
             selected_instances.performance_data = pd.DataFrame(columns=train_scenario.performance_data.columns, data=performance_data)
 
-            selected_features = self.selet_features(train_scenario)
-            selected_features_positions = [train_scenario.features.index(feature) for feature in selected_features]
-            self.list_of_bagged_features.append(selected_features_positions)
+            #select features is now done in the binary decision tree
+            #selected_features = self.selet_features(train_scenario)
+            #selected_features_positions = [train_scenario.features.index(feature) for feature in selected_features]
+            #self.list_of_bagged_features.append(selected_features_positions)
 
-            selected_instances.features = selected_features
-            selected_instances.feature_data = selected_instances.feature_data[selected_features]
+            #selected_instances.features = selected_features
+            #selected_instances.feature_data = selected_instances.feature_data[selected_features]
 
-            tree.fit(selected_instances, fold, amount_of_training_instances, depth, do_preprocessing)
+            tree.fit(selected_instances, fold, amount_of_training_instances, depth, do_preprocessing, self.amount_of_features)
 
         return self
 
@@ -62,5 +64,4 @@ class CombinedRankingAndRegressionForest:
             predictions.append(tree.predict(tree_features, scenario))
         return self.consensus(predictions)
 
-    def selet_features(self, scenario: ASlibScenario):
-        return random.sample(scenario.features, self.amount_of_features)
+

@@ -70,7 +70,7 @@ class BinaryDecisionTree:
     def get_name(self):
         return "BinaryDecisionTree_" + str(self.mu)
 
-    def fit(self, train_scenario: ASlibScenario, fold, amount_of_training_instances, depth=0, do_preprocessing=True):
+    def fit(self, train_scenario: ASlibScenario, fold, amount_of_training_instances, depth=0, do_preprocessing=True, amount_of_instances_to_use=1):
         def scenario_preporcessing():
             self.imputer = SimpleImputer()
             transformed_features = self.imputer.fit_transform(train_scenario.feature_data.values)
@@ -126,6 +126,10 @@ class BinaryDecisionTree:
 
         if depth == 0:
             train_scenario.feature_data, train_scenario.performance_data = scenario_preporcessing()
+
+        # select set of features randomly at each node
+        train_scenario.features = self.selet_features(train_scenario.feature_data, amount_of_instances_to_use)
+        train_scenario.feature_data = train_scenario.feature_data[train_scenario.features]
 
         feature_data = train_scenario.feature_data.values
         performance_data = train_scenario.performance_data.values
@@ -220,6 +224,9 @@ class BinaryDecisionTree:
             self.right.fit(bigger_scenario, self.fold, amount_of_training_instances, depth=depth + 1)
 
         return self
+
+    def selet_features(self, scenario: ASlibScenario):
+        return random.sample(scenario.features, self.amount_of_features)
 
     def predict(self, features: np.array, scenario):
         assert features.ndim == 1, "Must be 1-dimensional"
