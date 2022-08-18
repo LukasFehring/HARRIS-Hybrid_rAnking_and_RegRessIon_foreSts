@@ -185,23 +185,6 @@ class BinaryDecisionTree:
             smaller_performance_instances = performance_data[smaller_instances]
             smaller_ranking_instances = rankings[smaller_instances]
 
-            # print(f"amount of smaller rankings is {len(smaller_ranking_instances)/len(performance_data)} of the length of instances")
-
-            # bigger_performance_instances = performance_data[bigger_instances]
-            # bigger_ranking_instances = rankings[bigger_instances]
-
-            ## print(f"amount of bigger rankings is {len(bigger_ranking_instances)/len(performance_data)} of the length of instances")
-
-            ## calculate smalelr and bigger loss
-            # regression_loss = mean_square_error(smaller_performance_instances) * len(smaller_performance_instances) / len(performance_data) + mean_square_error(bigger_performance_instances) * len(
-            #    bigger_performance_instances
-            # ) / len(performance_data)
-            # ranking_loss = self.ranking_loss(smaller_performance_instances, self.borda_score, smaller_ranking_instances) * len(smaller_performance_instances) / len(
-            #    performance_data
-            # ) + self.ranking_loss(bigger_performance_instances, self.borda_score, bigger_ranking_instances) * len(bigger_performance_instances) / len(performance_data)
-
-            # self.loss_overview.append(((1 - self.impact_factor) * regression_loss / best_known_split_loss, self.impact_factor * ranking_loss / best_known_split_loss))
-
             bigger_scenario = deepcopy(train_scenario)
             bigger_scenario.feature_data = train_scenario.feature_data[bigger_instances]
             bigger_scenario.performance_data = train_scenario.performance_data[bigger_instances]
