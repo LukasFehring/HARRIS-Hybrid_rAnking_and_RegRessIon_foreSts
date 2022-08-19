@@ -290,9 +290,9 @@ def create_approach(approach_names):
             borda_score = borda_score_mean_ranking
             impact_factor = 0.5
             stopping_criterion = max_depth
-            stopping_depth = 3
-            amount_of_trees = 30
-            feature_percentage = 0.7
+            stopping_depth = 5
+            amount_of_trees = 100
+            feature_percentage = 1
             for consensus_function in (average_runtimes, max_runtimes, min_runtimes):
                 stopping_criterion = max_depth
                 binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_depth)
