@@ -55,4 +55,11 @@ for scenarioname in [f.path for f in os.scandir("data/aslib_data-master") if f.i
         )
     )
 
-print(pd.DataFrame(relevant_data, columns=columns).to_latex(index=False, column_format="l|cccccccccc").replace("\\toprule\n", "").replace("\\midrule", "\\hline").replace("\\bottomrule\n", ""))
+print(
+    pd.DataFrame(relevant_data, columns=columns)
+    .sort_values(["Scenario"])
+    .to_latex(index=False, column_format="l|cccccccccc")
+    .replace("\\toprule\n", "")
+    .replace("\\midrule", "\\hline")
+    .replace("\\bottomrule\n", "")
+)
