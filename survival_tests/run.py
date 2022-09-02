@@ -325,6 +325,30 @@ def create_approach(approach_names):
                     forest = Forest(amount_of_trees, binary_decision_tree, consensus=consensus_function, feature_percentage=feature_percentage)
                     approaches.append(forest)
 
+        if approach_name == "poster_forest":
+            regression_loss = copy.deepcopy(mean_square_error)
+            borda_score = borda_score_mean_ranking
+            stopping_criterion = max_depth
+            amount_of_trees = 100
+            feature_percentage = 0.7
+            ranking_loss = modified_position_error
+            consensus_function = average_runtimes
+            stopping_threshold = 6
+            for impact_factor in np.arange(0.0, 1.05, 0.1):
+                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                forest = Forest(amount_of_trees, binary_decision_tree, consensus=consensus_function, feature_percentage=feature_percentage)
+                approaches.append(forest)
+
+        if approach_name == "poster_tree":
+            regression_loss = copy.deepcopy(mean_square_error)
+            borda_score = borda_score_mean_ranking
+            stopping_criterion = max_depth
+            ranking_loss = modified_position_error
+            for stopping_threshold in (1, 2, 3, 4, 5):
+                for impact_factor in np.arange(0.0, 1.05, 0.1):
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    approaches.append(binary_decision_tree)
+
     return approaches
 
 
@@ -356,7 +380,7 @@ tune_hyperparameters = bool(int(config["EXPERIMENTS"]["tune_hyperparameters"]))
 
 
 for scenario in scenarios:
-    for fold in range(1, 6):
+    for fold in range(1, 11):
         approaches = create_approach(approach_names)
 
         if len(approaches) < 1:
