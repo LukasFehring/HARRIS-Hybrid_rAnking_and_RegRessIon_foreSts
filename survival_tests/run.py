@@ -349,6 +349,18 @@ def create_approach(approach_names):
                     binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
                     approaches.append(binary_decision_tree)
 
+        if approach_name == "evaluate_ranking_loss_and_lambda":
+            regression_loss = copy.deepcopy(mean_square_error)
+            borda_score = borda_score_mean_ranking
+            stopping_criterion = max_depth
+            stopping_threshold = 8
+            consensus_function = average_runtimes
+            for ranking_loss in [corrected_spearman_footrule, squared_hinge_loss, modified_position_error, spearman_rank_correlation]:
+                for impact_factor in [0.3, 0.7, 1]:
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                    forest = Forest(100, binary_decision_tree, consensus=average_runtimes, feature_percentage=0.7)
+                    approaches.append(forest)
+
     return approaches
 
 
@@ -380,7 +392,7 @@ tune_hyperparameters = bool(int(config["EXPERIMENTS"]["tune_hyperparameters"]))
 
 
 for scenario in scenarios:
-    for fold in range(1, 11):
+    for fold in range(1, 6):
         approaches = create_approach(approach_names)
 
         if len(approaches) < 1:
