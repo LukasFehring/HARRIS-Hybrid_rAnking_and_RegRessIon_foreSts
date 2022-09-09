@@ -21,7 +21,7 @@ class CombinedRankingAndRegressionForest:
         self.amount_of_features = 0
 
     def get_name(self):
-        return f"CombinedForest with {len(self.trees)} trees, {self.consensus.__name__} as consensus, {self.feature_percentage} of features"
+        return f"CombinedForest with {len(self.trees)} trees, {self.consensus.__name__} as consensus, {self.feature_percentage} of features and mu = {self.trees[0].mu}"
 
     def fit(self, train_scenario: ASlibScenario, fold, amount_of_training_instances, depth=0, do_preprocessing=True):
         self.amount_of_features = math.ceil(len(train_scenario.features) * self.feature_percentage)
