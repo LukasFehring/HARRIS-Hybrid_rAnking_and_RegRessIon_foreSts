@@ -34,7 +34,7 @@ class BinaryDecisionTree:
         stopping_threshold=None,
         old_threshold=None,
         loss_overview=list(),
-        mu=1,
+        mu=10,
         do_preprocessing=True,
     ):
         self.left = None
@@ -80,13 +80,10 @@ class BinaryDecisionTree:
             # self.scaler = preprocessing.MinMaxScaler()
             # transformed_features = self.scaler.fit_transform(transformed_features)
             if self.preprocessing:
-                performance_data = preprocessing.MinMaxScaler().fit_transform(train_scenario.performance_data.values)
+                performance_data = train_scenario.performance_data / (self.mu * train_scenario.algorithm_cutoff_time)
             else:
                 performance_data = train_scenario.performance_data.values
-            return pd.DataFrame(transformed_features, columns=train_scenario.feature_data.columns,), pd.DataFrame(
-                performance_data,
-                columns=train_scenario.performance_data.columns,
-            )
+            return pd.DataFrame(transformed_features, columns=train_scenario.feature_data.columns,), pd.DataFrame(performance_data, columns=train_scenario.performance_data.columns,)
 
         def split_by_feature_value(feature_data, splitting_point):
             smaller_feature_instances = feature_data < splitting_point
@@ -155,7 +152,11 @@ class BinaryDecisionTree:
             old_threshold=self.old_threshold,
         )
         if stop:
+            performance_data = performance_data * (self.mu * train_scenario.algorithm_cutoff_time)
+            performance_data[performance_data == self.mu * train_scenario.algorithm_cutoff_time]  = 10 * train_scenario.algorithm_cutoff_time
             self.label = np.average(performance_data, axis=0)
+            return self
+
         else:
             best_known_split_loss = math.inf
             best_known_split_point = best_known_split_feature_number = None

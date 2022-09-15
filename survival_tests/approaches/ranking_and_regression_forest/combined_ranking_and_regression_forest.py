@@ -52,4 +52,5 @@ class CombinedRankingAndRegressionForest:
         predictions = []
         for tree in self.trees:
             predictions.append(tree.predict(features, scenario))
+            # scale up predictions
         return self.consensus(predictions)

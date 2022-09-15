@@ -42,6 +42,7 @@ from baselines.satzilla11 import SATzilla11
 from baselines.snnap import SNNAP
 from baselines.sunny import SUNNY
 from evaluation import evaluate_scenario
+from mse import MSE
 from number_unsolved_instances import NumberUnsolvedInstances
 from par_10_metric import Par10Metric
 
@@ -356,14 +357,18 @@ def create_approach(approach_names):
             consensus_function = average_runtimes
             ranking_loss = corrected_spearman_footrule
             for impact_factor in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]:
-                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold)
+                stopping_threshold = 3
+                binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold, mu=1)
                 approaches.append(binary_decision_tree)
-                forest = Forest(100, binary_decision_tree, consensus=average_runtimes, feature_percentage=0.7)
+                stopping_threshold = 8
+                forest = Forest(100, copy.deepcopy(binary_decision_tree), consensus=average_runtimes, feature_percentage=0.7)
                 approaches.append(forest)
 
+                stopping_threshold = 3
                 binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold, mu=10)
                 approaches.append(binary_decision_tree)
-                forest = Forest(100, binary_decision_tree, consensus=average_runtimes, feature_percentage=0.7)
+                stopping_threshold = 8
+                forest = Forest(100, copy.deepcopy(binary_decision_tree), consensus=average_runtimes, feature_percentage=0.7)
                 approaches.append(forest)
 
     return approaches
@@ -408,6 +413,7 @@ for scenario in scenarios:
             metrics.append(NDCG())
             metrics.append(KendallsTau_b())
             metrics.append(Performance_Regret())
+            metrics.append(MSE())
             if approach.get_name() != "oracle":
                 metrics.append(NumberUnsolvedInstances(False))
                 metrics.append(NumberUnsolvedInstances(True))
