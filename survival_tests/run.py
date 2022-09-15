@@ -368,7 +368,7 @@ def create_approach(approach_names):
                 binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold, mu=10)
                 approaches.append(binary_decision_tree)
                 stopping_threshold = 8
-                    
+
         if approach_name == "middle_evaluation_vs_other_approaches":
             regression_loss = copy.deepcopy(mean_square_error)
             borda_score = borda_score_mean_ranking
@@ -377,7 +377,7 @@ def create_approach(approach_names):
             consensus_function = average_runtimes
             ranking_loss = corrected_spearman_footrule
             for impact_factor in [0, 0.2, 0.4, 0.6, 0.8, 1]:
-                for stopping_threshold in [2, 4, 6, 8]:
+                for stopping_threshold in [2, 4, 6, 8, 10]:
                     binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold, mu=10)
                     forest = Forest(100, copy.deepcopy(binary_decision_tree), consensus=average_runtimes, feature_percentage=0.7)
                     approaches.append(forest)
