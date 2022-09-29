@@ -55,7 +55,7 @@ conda activate HARRIS
 to activate the environment and run the code (see step 4).
 
 ### 3. Workspace Configuration
-Your cwd should be set to `./survival_tests` for execution. For execution you need to include the folder `./survival_tests` to your lookup path e.g, with
+Your cwd should be set to `./survival_tests` for execution. For execution you need to append the folder `./survival_tests` to your lookup path e.g, with
 ```
 export PYTHONPATH="$PYTHONPATH:path/to/cwd"
 ```
