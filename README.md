@@ -38,7 +38,7 @@ approaches=HARRIS,isac,per_algorithm_regressor,satzilla-11
 amount_of_training_scenario_instances=-1
 amount_of_cpus=16
 tune_hyperparameters=0
-train_status=clip_censored
+train_status=all
 ```
 
 You have to adapt all entries below the `[DATABASE]` tag according to your database server setup. The entries have the following meaning:
