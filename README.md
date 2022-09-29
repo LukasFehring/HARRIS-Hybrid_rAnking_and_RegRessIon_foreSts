@@ -1,6 +1,6 @@
 # Code for paper: "HARRIS: Hybrid Ranking and Regression Forests for Algorithm Selection"
 
-This repository holds the code for our paper "HARRIS: Hybrid Ranking and Regression Forests for Algorithm Selection" by Lukas Fehring, Alexander Tornede, and Jonas Hanselle. Regarding questions please contact lukas.fehring@stud.uni-hannover.de.
+This repository holds the code for our paper "HARRIS: Hybrid Ranking and Regression Forests for Algorithm Selection" by Lukas Fehring, Alexander Tornede, and Jonas Hanselle. It is build on top of https://github.com/alexandertornede/algorithm_survival_analysis. Regarding questions please contact lukas.fehring@stud.uni-hannover.de.
 
 Please cite this work as
 ```
