@@ -390,7 +390,8 @@ def create_approach(approach_names):
                     forest = Forest(100, copy.deepcopy(binary_decision_tree), consensus=average_runtimes, feature_percentage=0.7)
                     approaches.append(forest)
                     
-        if approach_name == 'HARRIS':regression_loss = copy.deepcopy(mean_square_error)
+        if approach_name == 'HARRIS':
+            regression_loss = copy.deepcopy(mean_square_error)
             borda_score = borda_score_mean_ranking
             stopping_criterion = max_depth
             consensus_function = average_runtimes

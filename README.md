@@ -1,21 +1,19 @@
-# Code for paper: "Run2Survive: A Decision-theoretic Approach to Algorithm Selection based on Survival Analysis"
+# Code for paper: "HARRIS: Hybrid Ranking and Regression Forests for Algorithm Selection"
 
-This repository holds the code for our paper "Run2Survive: A Decision-theoretic Approach to Algorithm Selection based on Survival Analysis" by Alexander Tornede, Marcel Wever, Stefan Werner, Felix Mohr and Eyke Hüllermeier. Regarding questions please contact alexander.tornede@upb.de .
+This repository holds the code for our paper "HARRIS: Hybrid Ranking and Regression Forests for Algorithm Selection" by Lukas Fehring, Alexander Tornede, and Jonas Hanselle. Regarding questions please contact lukas.fehring@stud.uni-hannover.de.
 
 Please cite this work as
 ```
-@inproceedings{tornede2020run2survive,
-  title={Run2survive: a decision-theoretic approach to algorithm selection based on survival analysis},
-  author={Tornede, Alexander and Wever, Marcel and Werner, Stefan and Mohr, Felix and H{\"u}llermeier, Eyke},
-  booktitle={Asian Conference on Machine Learning},
-  pages={737--752},
-  year={2020},
-  organization={PMLR}
+@inproceedings{fehring2022_HARRIS,
+  title={HARRIS: Hybrid Ranking and Regression Forests for Algorithm Selection},
+  author={Fehring, Lukas and Tornede, Alexander, and Hanselle, Jonas},
+  booktitle={Metalearn Workshop at Neurips2022},
+  year={2022},
 }
 ```
 
 ## Abstract
-Algorithm selection (AS) deals with the automatic selection of an algorithm from a fixed set of candidate algorithms most suitable for a specific instance of an algorithmic problem class, where “suitability” often refers to an algorithm’s runtime. Due to possibly extremely long runtimes of candidate algorithms, training data for algorithm selection models is usually generated under time constraints in the sense that not all algorithms are run to completion on all instances. Thus, training data usually comprises censored information, as the true runtime of algorithms timed out remains unknown. However, many standard AS approaches are not able to handle such information in a proper way. On the other side, survival analysis (SA) naturally supports censored data and offers appropriate ways to use such data for learning distributional models of algorithm runtime, as we demonstrate in this work. We leverage such models as a basis of a sophisticated decision-theoretic approach to algorithm selection, which we dub Run2Survive. Moreover, taking advantage of a framework of this kind, we advocate a risk-averse approach to algorithm selection, in which the avoidance of a timeout is given high priority. In an extensive experimental study with the standard benchmark ASlib, our approach is shown to be highly competitive and in many cases even superior to state-of-the-art AS approaches.
+It is well known that different algorithms perform differently well on an instance of an algorithmic problem, motivating algorithm selection (AS): Given an instance of an algorithmic problem, which is the most suitable algorithm to solve it? As such, the AS problem has received considerable attention resulting in various approaches -- many of which either solve a regression or ranking problem under the hood. Although both of these formulations yield very natural ways to tackle AS, they have considerable weaknesses. On the one hand, correctly predicting the performance of an algorithm on an instance is a sufficient, but not a necessary condition to produce a correct ranking over algorithms and in particular ranking the best algorithm first. On the other hand, classical ranking approaches often do not account for concrete performance values available in the training data, but only leverage rankings composed from such data. We propose \name - Hybrid rAnking and RegRessIon foreSts - a new algorithm selector leveraging special forests, combining the strengths of both approaches while alleviating their weaknesses. \name' decisions are based on a forest model, whose trees are created based on splits optimized on a hybrid ranking and regression loss function. As our preliminary experimental study on ASLib shows, \name improves over standard algorithm selection approaches on some scenarios showing that combining ranking and regression in trees is indeed promising for AS.
 
 ## Execution Details (Getting the Code To Run)
 For the sake of reproducibility, we will detail how to reproduce the results presented in the paper below.
@@ -35,8 +33,8 @@ table = tablename
 ssl = true
 
 [EXPERIMENTS]
-scenarios=ASP-POTASSCO,BNSL-2016,CPMP-2015,CSP-2010,CSP-MZN-2013,CSP-Minizinc-Time-2016,GRAPHS-2015,MAXSAT-PMS-2016,MAXSAT-WPMS-2016,MAXSAT12-PMS,MAXSAT15-PMS-INDU,MIP-2016,PROTEUS-2014,QBF-2011,QBF-2014,QBF-2016,SAT03-16_INDU,SAT11-HAND,SAT11-INDU,SAT11-RAND,SAT12-ALL,SAT12-HAND,SAT12-INDU,SAT12-RAND,SAT15-INDU,TSP-LION2015
-approaches=sbs,oracle,per_algorithm_regressor,multiclass_algorithm_selector,satzilla-11,isac,sunny,ExpectationSurvivalForest,PAR10SurvivalForest,SurrogateAutoSurvivalForest
+scenarios=ASP-POTASSCO,CSP-Minizinc-Time-2016,MAXSAT12-PMS,MIP-2016,QBF-2011,QBF-2016,SAT12-ALL,SAT12-HAND,CPMP-2015
+approaches=HARRIS,isac,per_algorithm_regressor,satzilla-11
 amount_of_training_scenario_instances=-1
 amount_of_cpus=16
 tune_hyperparameters=0
@@ -54,15 +52,15 @@ You have to adapt all entries below the `[DATABASE]` tag according to your datab
 Entries below the `[EXPERIMENTS]` define which experiments will be run. The configuration above will produce the main results presented in the paper.
 
 ### 2. Packages and Dependencies
-For running the code several dependencies have to be fulfilled. The easiest way of getting there is by using [Anaconda](https://anaconda.org/). For this purpose you find an Anaconda environment definition called `survival_analysis_environment.yml` in the `singularity` folder at the top-level of this project.  Assuming that you have Anaconda installed, you can create an according environment with all required packages via
+For running the code several dependencies have to be fulfilled. The easiest way of getting there is by using [Anaconda](https://anaconda.org/). For this purpose, you find an Anaconda environment definition called `environment.yml` at the top-level of this project.  Assuming that you have Anaconda installed, you can create an according environment with all required packages via
 
 ```
-conda env create -f survival_analysis_environment.yml
+conda env create -f environment.yml
 ``` 
 
-which will create an environment named `survival_tests`. After it has been successfully installed, you can use 
+which will create an environment named `HARRIS`. After it has been successfully installed, you can use 
 ```
-conda activate survival_tests
+conda activate HARRIS
 ```
 to activate the environment and run the code (see step 4).
 
@@ -72,9 +70,11 @@ Obviously, the code requires access to the ASLib scenarios in order to run the r
 ./survival_tests
 ./survival_tests/approaches
 ./survival_tests/approaches/survival_forests
+./survival_tests/approaches/combined_ranking_and_regression_forest
+./survival_tests/approaches/combined_ranking_and_regerssion_trees
 ./survival_tests/results
 ./survival_tests/singularity
-./survival_tests/baselines
+./survival_tests/tests
 ./survival_tests/data
 ./survival_tests/data/aslib_data-master
 ./survival_tests/conf
@@ -91,30 +91,9 @@ At this point you should be good to go and can execute the experiments by runnin
 * `approach`: The approach which achieved the reported results, where `Run2SurviveExp := Expectation_algorithm_survival_forest`, `Run2SurvivaPar10 := PAR10_algorithm_survival_forest` and `Run2SurvivePolyLog := SurrogateAutoSurvivalForest`
 * `metric`: The metric which was used to generate the result. For the `number_unsolved_instances` metric, the suffix `True` indicates that feature costs are accounted for whereas for `False` this is not the case. All other metrics automatically incorporate feature costs.
 * `result`: The output of the corresponding metric.
+* `impact_factor`: Null if not Hybrid Forest or Hybrid Tree, else λ from the paper
+* `stopping_criteria`: Null if not Hybrid Forest or Hybrid Tree, else stopping criterion of tree(s)
+* `ranking_error`: Null iff not Hybrid forest or Hybrid Tree, else ranking error used at training time
 
-### 5. Baseline Adaptations
-Remember that for the baselines different ways of dealing with the censored information are considered. When using the configuration given above, you will obtain the results of the different Run2Survive variants and all baselines where censored information is treated according to the "runtime" strategy mentioned in the paper. For obtaining the baseline results associated with the PAR10 strategy, you have to exchange the `[EXPERIMENTS]` part of the configuration by the following snippet
-
-```
-[EXPERIMENTS]
-scenarios=ASP-POTASSCO,BNSL-2016,CPMP-2015,CSP-2010,CSP-MZN-2013,CSP-Minizinc-Time-2016,GRAPHS-2015,MAXSAT-PMS-2016,MAXSAT-WPMS-2016,MAXSAT12-PMS,MAXSAT15-PMS-INDU,MIP-2016,PROTEUS-2014,QBF-2011,QBF-2014,QBF-2016,SAT03-16_INDU,SAT11-HAND,SAT11-INDU,SAT11-RAND,SAT12-ALL,SAT12-HAND,SAT12-INDU,SAT12-RAND,SAT15-INDU,TSP-LION2015
-approaches=sbs,oracle,per_algorithm_regressor,multiclass_algorithm_selector,satzilla-11,isac,sunny
-amount_of_training_scenario_instances=-1
-amount_of_cpus=16
-tune_hyperparameters=0
-train_status=all
-```
-
-To obtain the baselines results associated with the "ignored" strategy, the following snippet has to be used
-```
-[EXPERIMENTS]
-scenarios=ASP-POTASSCO,BNSL-2016,CPMP-2015,CSP-2010,CSP-MZN-2013,CSP-Minizinc-Time-2016,GRAPHS-2015,MAXSAT-PMS-2016,MAXSAT-WPMS-2016,MAXSAT12-PMS,MAXSAT15-PMS-INDU,MIP-2016,PROTEUS-2014,QBF-2011,QBF-2014,QBF-2016,SAT03-16_INDU,SAT11-HAND,SAT11-INDU,SAT11-RAND,SAT12-ALL,SAT12-HAND,SAT12-INDU,SAT12-RAND,SAT15-INDU,TSP-LION2015
-approaches=sbs,oracle,per_algorithm_regressor,multiclass_algorithm_selector,satzilla-11,isac,sunny
-amount_of_training_scenario_instances=-1
-amount_of_cpus=16
-tune_hyperparameters=0
-train_status=ignore_censored
-```
-
-### 6. Generating Plots
-All plots found in the paper can be generated using the self-explanatory Jupyter notebook `visualization.ipynb` in the top-level `results` folder.
+### 6. Generating Plots and table
+All plots/the table found in the paper can be generated using the self-explanatory Jupyter notebook `visualization.ipynb` in the top-level `results` folder.
