@@ -11,7 +11,7 @@ For the sake of reproducibility, we will detail how to reproduce the results pre
 ### 1. Configuration
 In order to reproduce the results by running our code, we assume that you have a MySQL server with version >=5.7.9 running.
 
-As a next step, you have to create a configuration file entitled `experiment_configuration.cfg` in the `conf` folder either on the top level of your IDE project next to the `allocate.txt`. This configuration file should contain the following information:
+As a next step, you have to create a configuration file entitled `experiment_configuration.cfg` in the `conf` folder. This configuration file should contain the following information:
 
 ```
 [DATABASE]
