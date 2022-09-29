@@ -389,6 +389,19 @@ def create_approach(approach_names):
                     binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold, mu=10)
                     forest = Forest(100, copy.deepcopy(binary_decision_tree), consensus=average_runtimes, feature_percentage=0.7)
                     approaches.append(forest)
+                    
+        if approach_name == 'HARRIS':regression_loss = copy.deepcopy(mean_square_error)
+            borda_score = borda_score_mean_ranking
+            stopping_criterion = max_depth
+            consensus_function = average_runtimes
+            ranking_loss = corrected_spearman_footrule
+            for impact_factor in [0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1]:
+                for stopping_threshold in [2, 4, 6, 8, 10]:
+                    binary_decision_tree = BinaryDecisionTree(ranking_loss, regression_loss, borda_score, impact_factor, stopping_criterion, stopping_threshold=stopping_threshold, mu=10)
+                    forest = Forest(100, copy.deepcopy(binary_decision_tree), consensus=average_runtimes, feature_percentage=0.7)
+                    approaches.append(forest)
+      
+      
 
     return approaches
 
