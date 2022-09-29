@@ -54,7 +54,13 @@ conda activate HARRIS
 ```
 to activate the environment and run the code (see step 4).
 
-### 3. ASLib Data
+### 3. Workspace Configuration
+Your cwd should be set to `./survival_tests` for execution. For execution you need to include the folder `./survival_tests` to your lookup path e.g, with
+```
+export PYTHONPATH="$PYTHONPATH:path/to/cwd"
+```
+
+### 4. ASLib Data
 Obviously, the code requires access to the ASLib scenarios in order to run the requested evaluations. It expects the ASLib scenarios (which can be downloaded from [Github](https://github.com/coseal/aslib_data)) to be located in a folder `data/aslib_data-master` on the top-level of your IDE project. I.e. your folder structure should look similar to this: 
 ```
 ./survival_tests
@@ -71,7 +77,7 @@ Obviously, the code requires access to the ASLib scenarios in order to run the r
 ```
 
 
-### 4. Evaluation Results
+### 5. Evaluation Results
 At this point you should be good to go and can execute the experiments by running the `run.py` on the top-level of the project. 
 
  All results will be stored in the table given in the configuration file and has the following columns:
