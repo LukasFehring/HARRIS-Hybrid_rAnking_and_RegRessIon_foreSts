@@ -2,16 +2,6 @@
 
 This repository holds the code for our paper "HARRIS: Hybrid Ranking and Regression Forests for Algorithm Selection" by Lukas Fehring, Alexander Tornede, and Jonas Hanselle. It is build on top of https://github.com/alexandertornede/algorithm_survival_analysis. Regarding questions please contact lukas.fehring@stud.uni-hannover.de.
 
-Please cite this work as
-```
-@inproceedings{fehring2022_HARRIS,
-  title={HARRIS: Hybrid Ranking and Regression Forests for Algorithm Selection},
-  author={Fehring, Lukas and Tornede, Alexander, and Hanselle, Jonas},
-  booktitle={Metalearn Workshop at Neurips2022},
-  year={2022},
-}
-```
-
 ## Abstract
 It is well known that different algorithms perform differently well on an instance of an algorithmic problem, motivating algorithm selection (AS): Given an instance of an algorithmic problem, which is the most suitable algorithm to solve it? As such, the AS problem has received considerable attention resulting in various approaches -- many of which either solve a regression or ranking problem under the hood. Although both of these formulations yield very natural ways to tackle AS, they have considerable weaknesses. On the one hand, correctly predicting the performance of an algorithm on an instance is a sufficient, but not a necessary condition to produce a correct ranking over algorithms and in particular ranking the best algorithm first. On the other hand, classical ranking approaches often do not account for concrete performance values available in the training data, but only leverage rankings composed from such data. We propose \name - Hybrid rAnking and RegRessIon foreSts - a new algorithm selector leveraging special forests, combining the strengths of both approaches while alleviating their weaknesses. \name' decisions are based on a forest model, whose trees are created based on splits optimized on a hybrid ranking and regression loss function. As our preliminary experimental study on ASLib shows, \name improves over standard algorithm selection approaches on some scenarios showing that combining ranking and regression in trees is indeed promising for AS.
 
