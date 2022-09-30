@@ -198,4 +198,3 @@ dependencies:
     - tenacity==8.0.1
     - tornado==6.1
     - traitlets==5.2.1.post0
-prefix: /home/tornede/anaconda3/envs/HARRIS
