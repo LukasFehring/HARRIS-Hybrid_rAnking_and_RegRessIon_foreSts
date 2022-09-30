@@ -93,3 +93,5 @@ At this point you should be good to go and can execute the experiments by runnin
 
 ### 6. Generating Plots and table
 All plots/the table found in the paper can be generated using the self-explanatory Jupyter notebook `visualization.ipynb` in the top-level `results` folder.
+    - traitlets==5.2.1.post0
+prefix: /home/tornede/anaconda3/envs/HARRIS
